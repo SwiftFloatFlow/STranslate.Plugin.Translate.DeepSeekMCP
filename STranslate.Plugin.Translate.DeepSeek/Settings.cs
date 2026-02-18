@@ -180,9 +180,9 @@ public class Settings
             }
             
             // 设置来源标识
-            if (prompt.GetTag() == null)
+            if (prompt.Tag == null)
             {
-                prompt.SetTag("Local");
+                prompt.Tag = "Local";
             }
             
             // 迁移策略映射：尝试用名称查找旧映射，迁移到ID键

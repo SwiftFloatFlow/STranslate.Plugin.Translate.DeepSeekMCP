@@ -10,7 +10,12 @@ public class PromptDisplayNameConverter : IValueConverter
     {
         if (value is Prompt prompt)
         {
-            return prompt.GetPromptDisplayName();
+            var tag = prompt.Tag?.ToString();
+            if (tag?.StartsWith("Global:") == true)
+            {
+                return $"{prompt.Name} [全局]";
+            }
+            return prompt.Name;
         }
         return value?.ToString() ?? "";
     }

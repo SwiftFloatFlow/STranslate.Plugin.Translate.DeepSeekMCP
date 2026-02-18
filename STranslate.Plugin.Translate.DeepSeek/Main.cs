@@ -22,22 +22,6 @@ public class Main : LlmTranslatePluginBase
     private readonly SemaphoreSlim _translationSemaphore = new(5, 5);
 
     /// <summary>
-    /// 判断提示词是否为全局提示词
-    /// </summary>
-    public static bool IsGlobalPrompt(Prompt prompt)
-    {
-        return prompt.IsGlobalPrompt();
-    }
-
-    /// <summary>
-    /// 获取提示词的显示名称（带来源标识）
-    /// </summary>
-    public static string GetPromptDisplayName(Prompt prompt)
-    {
-        return prompt.GetPromptDisplayName();
-    }
-
-    /// <summary>
     /// 获取提示词的策略映射键（统一使用ID）
     /// </summary>
     /// <param name="prompt">提示词</param>
@@ -45,12 +29,12 @@ public class Main : LlmTranslatePluginBase
     /// <returns>策略键（ID）</returns>
     public static string GetStrategyKey(Prompt prompt, Dictionary<string, string> promptIdMap)
     {
-        var tag = prompt.GetTag()?.ToString();
+        var tag = prompt.Tag?.ToString();
         
         // 全局提示词：从Tag中提取ID
         if (tag?.StartsWith("Global:") == true)
         {
-            return tag.Substring(7);  // 去掉 "Global:" 前缀
+            return tag.Substring(7);
         }
         
         // 局部提示词：从映射表中获取ID
@@ -220,9 +204,9 @@ public class Main : LlmTranslatePluginBase
                 id = Guid.NewGuid().ToString("N");
                 Settings.PromptIdMap[prompt.Name] = id;
             }
-            if (prompt.GetTag() == null)
+            if (prompt.Tag == null)
             {
-                prompt.SetTag("Local");
+                prompt.Tag = "Local";
             }
             Prompts.Add(prompt);
         }
