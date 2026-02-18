@@ -213,10 +213,154 @@ public class Main : LlmTranslatePluginBase
         
         // 加载全局提示词
         LoadGlobalPrompts();
+        
+        // 注册全局提示词变更回调（实时通知）
+        Context.RegisterGlobalPromptsChangedCallback(OnGlobalPromptsChanged);
 
         if (Settings.EnableMcp && Settings.McpServers.Count > 0)
         {
             InitializeMcpClients();
+        }
+    }
+    
+    /// <summary>
+    /// 全局提示词变更回调处理
+    /// </summary>
+    private void OnGlobalPromptsChanged(IReadOnlyList<GlobalPrompt> globalPrompts)
+    {
+        if (ShouldLog(1))
+            Context.Logger.LogInformation("[提示词] 收到全局提示词变更通知，共 {Count} 个", globalPrompts.Count);
+        
+        // 在UI线程上执行刷新
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            RefreshGlobalPromptsFromList(globalPrompts);
+        });
+    }
+    
+    /// <summary>
+    /// 从全局提示词列表刷新（供回调使用）
+    /// </summary>
+    private void RefreshGlobalPromptsFromList(IReadOnlyList<GlobalPrompt> globalPrompts)
+    {
+        try
+        {
+            // 记录当前选中的全局提示词ID（如果有）
+            string? selectedGlobalId = null;
+            string? oldName = null;
+            if (SelectedPrompt != null && IsGlobalPrompt(SelectedPrompt))
+            {
+                var tag = SelectedPrompt.Tag?.ToString();
+                if (tag?.StartsWith("Global:") == true)
+                {
+                    selectedGlobalId = tag.Substring(7);
+                    oldName = SelectedPrompt.Name;
+                }
+            }
+            
+            var currentGlobalIds = globalPrompts.Select(g => g.Id).ToHashSet();
+            
+            // 1. 移除已删除的全局提示词
+            var promptsToRemove = Prompts.Where(p => 
+            {
+                var tag = p.Tag?.ToString();
+                if (tag?.StartsWith("Global:") == true)
+                {
+                    var id = tag.Substring(7);
+                    return !currentGlobalIds.Contains(id);
+                }
+                return false;
+            }).ToList();
+            
+            foreach (var prompt in promptsToRemove)
+            {
+                Prompts.Remove(prompt);
+                if (ShouldLog(1))
+                    Context.Logger.LogInformation("[提示词] 移除已删除的全局提示词: '{PromptName}'", prompt.Name);
+            }
+            
+            // 2. 更新或添加全局提示词
+            int addedCount = 0;
+            int updatedCount = 0;
+            foreach (var globalPrompt in globalPrompts)
+            {
+                var existingPrompt = Prompts.FirstOrDefault(p => 
+                {
+                    var tag = p.Tag?.ToString();
+                    return tag == $"Global:{globalPrompt.Id}";
+                });
+                
+                if (existingPrompt != null)
+                {
+                    // 更新现有提示词的名称（处理重命名情况）
+                    if (existingPrompt.Name != globalPrompt.Name)
+                    {
+                        var previousName = existingPrompt.Name;
+                        existingPrompt.Name = globalPrompt.Name;
+                        updatedCount++;
+                        if (ShouldLog(1))
+                            Context.Logger.LogInformation("[提示词] 全局提示词已重命名: '{OldName}' -> '{NewName}'", 
+                                previousName, globalPrompt.Name);
+                        
+                        // 触发属性变更通知，强制下拉菜单刷新显示
+                        OnPropertyChanged(nameof(Prompts));
+                        
+                        // 如果当前选中的就是这个提示词，也要触发SelectedPrompt变更
+                        if (SelectedPrompt == existingPrompt)
+                        {
+                            OnPropertyChanged(nameof(SelectedPrompt));
+                        }
+                    }
+                }
+                else
+                {
+                    // 添加新的全局提示词
+                    var prompt = globalPrompt.ToPrompt(true);
+                    prompt.Name = globalPrompt.Name;
+                    Prompts.Add(prompt);
+                    addedCount++;
+                }
+            }
+            
+            // 2.1 清理与全局提示词同名的局部提示词（防止重命名后出现重复）
+            // 注意：不要删除当前选中的提示词
+            var globalPromptNames = globalPrompts.Select(g => g.Name).ToHashSet();
+            var localPromptsToRemove = Prompts.Where(p => 
+            {
+                // 如果是局部提示词（Tag为null或Local）且名称与全局提示词相同，且不是当前选中的
+                var tag = p.Tag?.ToString();
+                bool isLocal = string.IsNullOrEmpty(tag) || tag == "Local";
+                bool isSelected = p == SelectedPrompt;
+                return isLocal && globalPromptNames.Contains(p.Name) && !isSelected;
+            }).ToList();
+            
+            foreach (var prompt in localPromptsToRemove)
+            {
+                Prompts.Remove(prompt);
+                if (ShouldLog(1))
+                    Context.Logger.LogInformation("[提示词] 移除与全局提示词同名的局部提示词: '{PromptName}'", prompt.Name);
+            }
+            
+            // 3. 如果当前选中的提示词被更新了，触发通知
+            if (selectedGlobalId != null && SelectedPrompt != null)
+            {
+                var tag = SelectedPrompt.Tag?.ToString();
+                if (tag == $"Global:{selectedGlobalId}" && oldName != SelectedPrompt.Name)
+                {
+                    OnPropertyChanged(nameof(SelectedPrompt));
+                    if (ShouldLog(1))
+                        Context.Logger.LogInformation("[提示词] 当前选中的全局提示词名称已更新: '{OldName}' -> '{NewName}'",
+                            oldName, SelectedPrompt.Name);
+                }
+            }
+            
+            if (ShouldLog(1) && (addedCount > 0 || updatedCount > 0 || promptsToRemove.Count > 0))
+                Context.Logger.LogInformation("[提示词] 全局提示词同步完成: 新增 {Added} 个, 更新 {Updated} 个, 移除 {Removed} 个", 
+                    addedCount, updatedCount, promptsToRemove.Count);
+        }
+        catch (Exception ex)
+        {
+            Context.Logger.LogError(ex, "[提示词] 刷新全局提示词失败");
         }
     }
 
@@ -228,21 +372,128 @@ public class Main : LlmTranslatePluginBase
         try
         {
             var globalPrompts = Context.GetGlobalPrompts();
+            int loadedCount = 0;
+            int updatedCount = 0;
             
             foreach (var globalPrompt in globalPrompts)
             {
-                var prompt = globalPrompt.ToPrompt(true);
-                // 重置名称为原始名称（不包含ID），Tag已由SDK设置
-                prompt.Name = globalPrompt.Name;
-                Prompts.Add(prompt);
+                // 检查是否已存在相同ID的全局提示词
+                var existingPrompt = Prompts.FirstOrDefault(p => 
+                {
+                    var tag = p.Tag?.ToString();
+                    return tag?.StartsWith("Global:") == true && 
+                           tag == $"Global:{globalPrompt.Id}";
+                });
+                
+                if (existingPrompt != null)
+                {
+                    // 更新现有提示词的名称（处理重命名情况）
+                    if (existingPrompt.Name != globalPrompt.Name)
+                    {
+                        var previousName = existingPrompt.Name;
+                        existingPrompt.Name = globalPrompt.Name;
+                        updatedCount++;
+                        if (ShouldLog(1))
+                            Context.Logger.LogInformation("[提示词] 全局提示词已重命名: '{OldName}' -> '{NewName}'", 
+                                previousName, globalPrompt.Name);
+                        
+                        // 触发属性变更通知，强制下拉菜单刷新显示
+                        OnPropertyChanged(nameof(Prompts));
+                        
+                        // 如果当前选中的就是这个提示词，也要触发SelectedPrompt变更
+                        if (SelectedPrompt == existingPrompt)
+                        {
+                            OnPropertyChanged(nameof(SelectedPrompt));
+                        }
+                    }
+                    
+                    // 确保全局提示词的Tag正确（防止被错误标记为Local）
+                    if (existingPrompt.Tag?.ToString() != $"Global:{globalPrompt.Id}")
+                    {
+                        existingPrompt.Tag = $"Global:{globalPrompt.Id}";
+                        if (ShouldLog(1))
+                            Context.Logger.LogInformation("[提示词] 修正全局提示词Tag: '{PromptName}'", globalPrompt.Name);
+                    }
+                }
+                else
+                {
+                    // 添加新的全局提示词
+                    var prompt = globalPrompt.ToPrompt(true);
+                    // 重置名称为原始名称（不包含ID），Tag已由SDK设置
+                    prompt.Name = globalPrompt.Name;
+                    Prompts.Add(prompt);
+                    loadedCount++;
+                }
             }
             
-            if (ShouldLog(1) && globalPrompts.Count > 0)
-                Context.Logger.LogInformation("[提示词] 已加载 {Count} 个全局提示词", globalPrompts.Count);
+            // 检查是否有已删除的全局提示词（可选：从列表中移除）
+            // 注意：不要删除当前选中的提示词
+            var currentGlobalIds = globalPrompts.Select(g => g.Id).ToHashSet();
+            var promptsToRemove = Prompts.Where(p => 
+            {
+                var tag = p.Tag?.ToString();
+                if (tag?.StartsWith("Global:") == true)
+                {
+                    var id = tag.Substring(7);
+                    bool isDeleted = !currentGlobalIds.Contains(id);
+                    bool isSelected = p == SelectedPrompt;
+                    return isDeleted && !isSelected;
+                }
+                return false;
+            }).ToList();
+            
+            foreach (var prompt in promptsToRemove)
+            {
+                Prompts.Remove(prompt);
+                if (ShouldLog(1))
+                    Context.Logger.LogInformation("[提示词] 移除已删除的全局提示词: '{PromptName}'", prompt.Name);
+            }
+            
+            if (ShouldLog(1) && (loadedCount > 0 || updatedCount > 0 || promptsToRemove.Count > 0))
+                Context.Logger.LogInformation("[提示词] 全局提示词同步完成: 新增 {Added} 个, 更新 {Updated} 个, 移除 {Removed} 个",
+                    loadedCount, updatedCount, promptsToRemove.Count);
         }
         catch (Exception ex)
         {
             Context.Logger.LogError(ex, "[提示词] 加载全局提示词失败");
+        }
+    }
+    
+    /// <summary>
+    /// 刷新全局提示词列表（供外部调用，如设置界面激活时）
+    /// </summary>
+    public void RefreshGlobalPrompts()
+    {
+        if (ShouldLog(1))
+            Context.Logger.LogInformation("[提示词] 开始刷新全局提示词列表");
+        
+        // 记录当前选中的全局提示词ID（如果有）
+        string? selectedGlobalId = null;
+        string? oldName = null;
+        if (SelectedPrompt != null && IsGlobalPrompt(SelectedPrompt))
+        {
+            var tag = SelectedPrompt.Tag?.ToString();
+            if (tag?.StartsWith("Global:") == true)
+            {
+                selectedGlobalId = tag.Substring(7);
+                oldName = SelectedPrompt.Name;
+            }
+        }
+        
+        LoadGlobalPrompts();
+        
+        // 如果之前有选中的全局提示词，检查其名称是否变更，并触发通知
+        if (selectedGlobalId != null && SelectedPrompt != null)
+        {
+            var tag = SelectedPrompt.Tag?.ToString();
+            if (tag == $"Global:{selectedGlobalId}" && oldName != SelectedPrompt.Name)
+            {
+                // 名称已变更，触发属性变更通知
+                OnPropertyChanged(nameof(SelectedPrompt));
+                if (ShouldLog(1))
+                    Context.Logger.LogInformation("[提示词] 当前选中的全局提示词名称已更新: '{OldName}' -> '{NewName}'",
+                        oldName, SelectedPrompt.Name);
+            }
         }
     }
 
@@ -315,6 +566,16 @@ public class Main : LlmTranslatePluginBase
     public override void Dispose()
     {
         _viewModel?.Dispose();
+        
+        // 注销全局提示词变更回调，避免内存泄漏
+        try
+        {
+            Context?.UnregisterGlobalPromptsChangedCallback(OnGlobalPromptsChanged);
+        }
+        catch (Exception ex)
+        {
+            Context?.Logger?.LogWarning("[提示词] 注销全局提示词变更回调时发生错误: {Error}", ex.Message);
+        }
         
         // 释放连接池
         _clientPool?.Dispose();
@@ -1680,18 +1941,22 @@ CRITICAL INSTRUCTIONS:
             return new CommandResult { IsCommand = true, Success = true, Message = "当前未选择提示词\n默认策略: 禁用服务" };
         }
 
-        var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
-        var strategyName = PromptStrategyHelper.GetStrategyName(strategy);
+        // 使用ID获取策略
+        var promptId = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
         
-        // 获取当前策略的工具结果模式和工具链显示状态
-        var toolResultMode = Settings.StrategyToolResultDisplayModes.TryGetValue(strategy, out var mode) ? mode : ToolResultDisplayMode.Disabled;
-        var toolChainEnabled = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var chainEnabled) ? chainEnabled : false;
+        // 检查策略映射是否存在
+        if (!Settings.PromptStrategyMap.TryGetValue(promptId, out var strategy))
+        {
+            strategy = McpToolStrategy.Disabled;
+        }
+        
+        var strategyName = PromptStrategyHelper.GetStrategyName(strategy);
         
         return new CommandResult 
         { 
             IsCommand = true, 
             Success = true, 
-            Message = $"当前提示词: {currentPrompt.Name}\n绑定策略: {strategyName}\n工具结果: {GetToolResultDisplayModeName(toolResultMode)}\n工具链显示: {(toolChainEnabled ? "✅ 开启" : "❎ 关闭")}" 
+            Message = $"当前提示词: {currentPrompt.Name}\n绑定策略: {strategyName}" 
         };
     }
 
@@ -1720,7 +1985,9 @@ CRITICAL INSTRUCTIONS:
         var currentPrompt = SelectedPrompt;
         if (currentPrompt != null)
         {
-            var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
+            // 使用ID获取策略
+            var promptId = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
+            var strategy = Settings.PromptStrategyMap.TryGetValue(promptId, out var s) ? s : McpToolStrategy.Disabled;
             var mode = Settings.StrategyToolResultDisplayModes.TryGetValue(strategy, out var m) ? m : ToolResultDisplayMode.Disabled;
             var toolChainEnabled = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var tc) ? tc : false;
             sb.AppendLine($"当前策略工具结果: {GetToolResultDisplayModeName(mode)}");
@@ -1789,7 +2056,9 @@ CRITICAL INSTRUCTIONS:
             return new CommandResult { IsCommand = true, Success = false, Message = "❎ 请先选择一个提示词" };
         }
 
-        var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
+        // 使用ID获取策略
+        var promptId = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
+        var strategy = Settings.PromptStrategyMap.TryGetValue(promptId, out var s) ? s : McpToolStrategy.Disabled;
         var currentValue = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var enabled) ? enabled : false;
         
         Settings.StrategyToolChainDisplay[strategy] = !currentValue;
@@ -1815,7 +2084,9 @@ CRITICAL INSTRUCTIONS:
             return new CommandResult { IsCommand = true, Success = false, Message = "❎ 请先选择一个提示词" };
         }
 
-        var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
+        // 使用ID获取策略
+        var promptId = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
+        var strategy = Settings.PromptStrategyMap.TryGetValue(promptId, out var s) ? s : McpToolStrategy.Disabled;
         
         // 如果没有参数，显示当前模式
         if (string.IsNullOrWhiteSpace(argument))
@@ -1954,15 +2225,18 @@ CRITICAL INSTRUCTIONS:
             };
         }
 
-        // 保存旧策略用于比较
-        var oldStrategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var old) ? old : McpToolStrategy.Disabled;
+        // 获取提示词ID（用于策略映射键）
+        var promptId = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
         
-        // 更新策略
-        Settings.PromptStrategyMap[currentPrompt.Name] = newStrategy.Value;
+        // 保存旧策略用于比较
+        var oldStrategy = Settings.PromptStrategyMap.TryGetValue(promptId, out var old) ? old : McpToolStrategy.Disabled;
+        
+        // 更新策略（使用ID作为键）
+        Settings.PromptStrategyMap[promptId] = newStrategy.Value;
         Context.SaveSettingStorage<Settings>();
 
-        // 触发事件通知UI更新
-        StrategyEvents.RaisePromptStrategyChanged(currentPrompt.Name, newStrategy.Value);
+        // 触发事件通知UI更新（使用ID而不是Name）
+        StrategyEvents.RaisePromptStrategyChanged(promptId, newStrategy.Value);
 
         var strategyName = PromptStrategyHelper.GetStrategyName(newStrategy.Value);
         var langIndicator = isEnglish ? "(EN)" : "(CN)";

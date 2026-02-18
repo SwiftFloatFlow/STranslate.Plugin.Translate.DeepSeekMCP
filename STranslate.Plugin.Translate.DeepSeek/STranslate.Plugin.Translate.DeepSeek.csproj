@@ -81,7 +81,7 @@
         </Reference>
         -->
         <!-- 使用Fork版本的本地NuGet包 -->
-        <PackageReference Include="STranslate.Plugin" Version="1.1.0-fork" />
+        <PackageReference Include="STranslate.Plugin" Version="1.2.0-fork" />
         <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
     </ItemGroup>

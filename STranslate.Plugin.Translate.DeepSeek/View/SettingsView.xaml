@@ -170,16 +170,19 @@
                             Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
                     </Border>
                     
-                    <!-- 提示词选择下拉框（使用转换器显示名称） -->
+                    <!-- 提示词选择下拉框 -->
                     <ComboBox
                         x:Name="PromptComboBox"
-                        MinWidth="120"
+                        Width="120"
                         ui:ControlHelper.PlaceholderText="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder}"
                         ItemsSource="{Binding Main.Prompts}"
                         SelectedItem="{Binding Main.SelectedPrompt, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding ., Converter={StaticResource PromptDisplayNameConverter}}"/>
+                                <TextBlock 
+                                    Text="{Binding ., Converter={StaticResource PromptDisplayNameConverter}}" 
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding Name}"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
@@ -210,7 +213,7 @@
                     
                     <!-- 策略选择下拉框 -->
                     <ComboBox 
-                        MinWidth="120"
+                        Width="120"
                         ItemsSource="{Binding PromptStrategyOptions}"
                         SelectedItem="{Binding SelectedPromptStrategy, Mode=TwoWay}"
                         IsEnabled="{Binding EnableMcp}"

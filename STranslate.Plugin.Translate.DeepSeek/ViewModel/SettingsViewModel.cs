@@ -111,6 +111,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             if (e.PropertyName == nameof(Main.SelectedPrompt))
             {
                 UpdateSelectedPromptStrategy();
+                OnPropertyChanged(nameof(SelectedPromptDisplayName));
+                OnPropertyChanged(nameof(IsSelectedPromptGlobal));
+                OnPropertyChanged(nameof(CanEditSelectedPrompt));
             }
         };
 
@@ -123,14 +126,18 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     private void OnPromptStrategyChanged(object? sender, PromptStrategyChangedEventArgs e)
     {
-        // 只有当当前显示的提示词与被修改的提示词相同时才更新UI
-        if (Main.SelectedPrompt?.Name == e.PromptName)
+        // 只有当当前显示的提示词与被修改的提示词ID相同时才更新UI
+        if (Main.SelectedPrompt != null)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            var currentPromptId = Main.GetStrategyKey(Main.SelectedPrompt, _settings.PromptIdMap);
+            if (currentPromptId == e.PromptId)
             {
-                SelectedPromptStrategy = PromptStrategyOptions.FirstOrDefault(o => o.Strategy == e.NewStrategy) ?? PromptStrategyOptions.First();
-                UpdateStrategyDisplayText();
-            });
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SelectedPromptStrategy = PromptStrategyOptions.FirstOrDefault(o => o.Strategy == e.NewStrategy) ?? PromptStrategyOptions.First();
+                    UpdateStrategyDisplayText();
+                });
+            }
         }
     }
 
@@ -324,19 +331,57 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
         
-        var dialog = _context.GetPromptEditWindow(Main.Prompts);
+        // 记住当前选中的提示词名称（用于保存后恢复选中）
+        string? selectedPromptName = Main.SelectedPrompt?.Name;
+        
+        // 只传递局部提示词给编辑窗口（全局提示词不应该出现在编辑窗口中）
+        // 创建新的集合，包含局部提示词的克隆
+        var localPrompts = new ObservableCollection<Prompt>(Main.Prompts
+            .Where(p => !Main.IsGlobalPrompt(p))
+            .Select(p => p.Clone()));
+        
+        var dialog = _context.GetPromptEditWindow(localPrompts);
 
         if (dialog.ShowDialog() == true)
         {
-            // 只保存局部提示词
-            var localPrompts = Main.Prompts
-                .Where(p => !Main.IsGlobalPrompt(p))
-                .Select(p => p.Clone())
-                .ToList();
-            _settings.Prompts = localPrompts;
+            // 保存局部提示词到设置
+            _settings.Prompts = localPrompts.ToList();
             _context.SaveSettingStorage<Settings>();
-            Main.SelectedPrompt = Main.Prompts.FirstOrDefault(p => p.IsEnabled);
+            
+            // 刷新插件的提示词列表：保留全局提示词，替换局部提示词
+            RefreshLocalPrompts(localPrompts);
+            
+            // 恢复选中项：优先选之前选中的，如果没有则选启用的
+            Main.SelectedPrompt = Main.Prompts.FirstOrDefault(p => p.Name == selectedPromptName) 
+                ?? Main.Prompts.FirstOrDefault(p => p.IsEnabled)
+                ?? Main.Prompts.FirstOrDefault();
         }
+    }
+    
+    /// <summary>
+    /// 刷新局部提示词列表（保留全局提示词）
+    /// </summary>
+    private void RefreshLocalPrompts(ObservableCollection<Prompt> newLocalPrompts)
+    {
+        // 记住全局提示词
+        var globalPrompts = Main.Prompts.Where(p => Main.IsGlobalPrompt(p)).ToList();
+        
+        // 清空集合并重新添加（触发CollectionChanged事件，UI会自动更新）
+        Main.Prompts.Clear();
+        
+        // 添加新的局部提示词
+        foreach (var prompt in newLocalPrompts)
+        {
+            Main.Prompts.Add(prompt);
+        }
+        
+        // 添加全局提示词
+        foreach (var prompt in globalPrompts)
+        {
+            Main.Prompts.Add(prompt);
+        }
+        
+        _context.Logger.LogInformation("[提示词] 提示词列表已刷新，共 {Count} 个", Main.Prompts.Count);
     }
 
     /// <summary>
@@ -388,17 +433,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             ? s 
             : McpToolStrategy.Disabled;
         
-        var strategyText = PromptStrategyHelper.GetStrategyDisplayText(strategy);
-        
-        // 全局提示词添加★标识
-        if (Main.IsGlobalPrompt(Main.SelectedPrompt))
-        {
-            SelectedPromptStrategyText = $"{strategyText} ★";
-        }
-        else
-        {
-            SelectedPromptStrategyText = strategyText;
-        }
+        // 只显示策略文本，不带★（★只显示在下拉菜单中的全局提示词名称后）
+        SelectedPromptStrategyText = PromptStrategyHelper.GetStrategyDisplayText(strategy);
     }
 
     /// <summary>
@@ -419,6 +455,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         
         var promptName = Main.SelectedPrompt.Name;
         _context.Logger.LogInformation($"[提示词策略] 提示词 '{promptName}'(ID:{strategyKey[..8]}...) 的策略已设置为: {PromptStrategyHelper.GetStrategyName(newStrategy)}");
+        
+        // 触发事件通知其他组件（如命令系统）策略已变更
+        StrategyEvents.RaisePromptStrategyChanged(strategyKey, newStrategy);
         
         // 立即更新显示文本（实时刷新）
         UpdateStrategyDisplayText();
@@ -777,6 +816,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool CanEditSelectedPrompt => 
         Main.SelectedPrompt != null && !IsSelectedPromptGlobal;
+    
+    /// <summary>
+    /// 当前选中的提示词显示名称（用于ComboBox显示）
+    /// </summary>
+    public string SelectedPromptDisplayName => 
+        Converters.PromptDisplayNameConverter.GetDisplayName(Main.SelectedPrompt);
 
     // 服务器列表管理
     [ObservableProperty] public partial ObservableCollection<McpServerConfig> McpServers { get; set; }

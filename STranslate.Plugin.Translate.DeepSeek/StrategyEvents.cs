@@ -7,12 +7,13 @@ namespace STranslate.Plugin.Translate.DeepSeek;
 /// </summary>
 public class PromptStrategyChangedEventArgs : EventArgs
 {
-    public string PromptName { get; }
+    /// <summary>提示词ID（全局或局部提示词的唯一标识）</summary>
+    public string PromptId { get; }
     public McpToolStrategy NewStrategy { get; }
 
-    public PromptStrategyChangedEventArgs(string promptName, McpToolStrategy newStrategy)
+    public PromptStrategyChangedEventArgs(string promptId, McpToolStrategy newStrategy)
     {
-        PromptName = promptName;
+        PromptId = promptId;
         NewStrategy = newStrategy;
     }
 }
@@ -67,9 +68,11 @@ public static class StrategyEvents
     /// <summary>
     /// 触发策略变更事件
     /// </summary>
-    public static void RaisePromptStrategyChanged(string promptName, McpToolStrategy newStrategy)
+    /// <param name="promptId">提示词ID（全局提示词使用其GUID，局部提示词使用PromptIdMap中的ID）</param>
+    /// <param name="newStrategy">新策略</param>
+    public static void RaisePromptStrategyChanged(string promptId, McpToolStrategy newStrategy)
     {
-        var args = new PromptStrategyChangedEventArgs(promptName, newStrategy);
+        var args = new PromptStrategyChangedEventArgs(promptId, newStrategy);
         _globalEvent?.Invoke(null, args);
     }
 

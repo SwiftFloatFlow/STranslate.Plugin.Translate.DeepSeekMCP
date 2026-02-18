@@ -25,8 +25,11 @@ public class Settings : ObservableObject
     public List<McpServerConfig> McpServers { get; set; }  // 服务器配置
     public int CurrentServerIndex { get; set; }            // 当前选中服务器
     
-    // 提示词级 MCP 策略映射表（Key: 提示词名称, Value: 策略，默认为Disabled）
+    // 提示词级 MCP 策略映射表（Key: 提示词ID, Value: 策略，默认为Disabled）
     public Dictionary<string, McpToolStrategy> PromptStrategyMap { get; set; } = new();
+    
+    // 提示词ID映射表（Key: 提示词名称, Value: 提示词ID）- 用于局部提示词
+    public Dictionary<string, string> PromptIdMap { get; set; } = new();
     
     // 策略级设置（Key: 策略类型）
     public Dictionary<McpToolStrategy, string> CustomStrategyPrompts { get; set; } = new();        // 自定义提示词
@@ -36,6 +39,23 @@ public class Settings : ObservableObject
     public Dictionary<McpToolStrategy, bool> StrategyToolChainDisplay { get; set; } = new();       // 工具链显示开关
 }
 ```
+
+### 重要变更（v4.0+）
+
+**提示词ID绑定**：策略映射现在使用提示词ID作为键，不再使用名称。这确保了即使提示词被重命名，策略绑定仍然有效。
+- `PromptIdMap` - 存储局部提示词名称到ID的映射
+- `PromptStrategyMap` - 使用ID作为键存储策略
+
+**全局提示词实时同步**：通过回调机制实现全局提示词的实时同步。
+- 插件注册 `RegisterGlobalPromptsChangedCallback` 回调
+- 主软件修改全局提示词时主动通知插件
+- 插件在UI线程上刷新提示词列表
+
+**UI优化**：
+- 提示词下拉框固定宽度120px
+- 全局提示词显示★前缀标识
+- 超长名称自动截断显示省略号
+- 鼠标悬停显示完整名称
 
 ### 重要变更（v3.0+）
 
