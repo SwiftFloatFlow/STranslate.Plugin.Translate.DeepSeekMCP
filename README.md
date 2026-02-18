@@ -116,9 +116,9 @@ DeepSeekMCP 的核心优势是支持 AI 在翻译过程中**动态调用外部 M
 | `混合` | 内联+截断显示结果       |
 | `详细` | 内联+完整显示结果       |
 
-👉 [查看 MCP 工具调用完整文档](./docs/modules/mcp-tool-calling.md)  
-👉 [查看策略系统详细文档](./docs/modules/tool-strategy.md)  
-👉 [查看命令系统文档](./docs/modules/command-system.md)
+👉 [查看 MCP 工具调用完整文档](./STranslate.Plugin.Translate.DeepSeek/docs/modules/mcp-tool-calling.md)  
+👉 [查看策略系统详细文档](./STranslate.Plugin.Translate.DeepSeek/docs/modules/tool-strategy.md)  
+👉 [查看命令系统文档](./STranslate.Plugin.Translate.DeepSeek/docs/modules/command-system.md)
 
 ## 项目结构
 
