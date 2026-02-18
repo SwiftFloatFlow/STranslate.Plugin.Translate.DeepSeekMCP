@@ -1,0 +1,4 @@
+{
+  "Name": "DeepSeek MCP",
+  "Description": "DeepSeek translation plugin with MCP server tool support. Enables AI to invoke external tools (web search, data query, code execution, etc.) during translation for smarter and more accurate results."
+}

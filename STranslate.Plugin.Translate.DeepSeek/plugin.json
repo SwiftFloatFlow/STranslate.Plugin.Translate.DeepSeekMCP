@@ -1,0 +1,10 @@
+{
+  "PluginID": "d99c702e39b44be5a9e49983ff0f4fff",
+  "Name": "DeepSeekMCP",
+  "Description": "DeepSeek MCP Translation Plugin with Model Context Protocol support",
+  "Author": "SwiftFloatFlow",
+  "Version": "1.0.0",
+  "Website": "https://github.com/SwiftFloatFlow/STranslate.Plugin.DeepSeek.MCP",
+  "ExecuteFileName": "STranslate.Plugin.DeepSeek.MCP.dll",
+  "IconPath": "icon.png"
+}

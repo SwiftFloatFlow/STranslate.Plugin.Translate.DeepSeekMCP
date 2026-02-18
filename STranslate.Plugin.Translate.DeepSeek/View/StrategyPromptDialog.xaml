@@ -1,0 +1,571 @@
+<Window x:Class="STranslate.Plugin.Translate.DeepSeek.View.StrategyPromptDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+        xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf"
+        mc:Ignorable="d"
+        Title="策略提示词配置" 
+        Height="650" 
+        Width="900"
+        MinHeight="550"
+        MinWidth="750"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ui:TitleBar.ExtendViewIntoTitleBar="True"
+        ui:WindowHelper.SystemBackdropType="Mica"
+        ui:WindowHelper.UseModernWindowStyle="True">
+    
+    <Grid Margin="24,40,24,24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!--  左侧：策略列表  -->
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  标题  -->
+            <Border
+                Grid.Row="0"
+                Margin="0,0,0,16"
+                Padding="12,8"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                    Text="策略列表" />
+            </Border>
+
+            <!--  策略列表  -->
+            <Border
+                Grid.Row="1"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <ListBox
+                    x:Name="StrategyListBox"
+                    Margin="4"
+                    Background="Transparent"
+                    ItemsSource="{Binding StrategyOptions}"
+                    SelectedItem="{Binding SelectedStrategy}">
+                    <ListBox.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="12,8" />
+                            <Setter Property="Margin" Value="2" />
+                            <Setter Property="ui:ControlHelper.CornerRadius" Value="4" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                FontSize="13"
+                                FontWeight="Medium"
+                                Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+
+        <GridSplitter
+            Grid.Row="0"
+            Grid.Column="1"
+            Width="8"
+            HorizontalAlignment="Stretch"
+            Background="Transparent" />
+
+        <!--  右侧：编辑区域（带滚动条）  -->
+        <ScrollViewer x:Name="RightPanelScrollViewer" Grid.Row="0" Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="350" />
+                </Grid.RowDefinitions>
+
+            <!--  标题  -->
+            <Border
+                Grid.Row="0"
+                Margin="0,0,0,16"
+                Padding="12,8"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                    Text="{Binding SelectedStrategy.Name, StringFormat='当前编辑：{0}'}" />
+            </Border>
+
+            <!--  变量说明提示框  -->
+            <Border
+                Grid.Row="1"
+                Margin="0,0,0,12"
+                Padding="12,10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <ikw:SimpleStackPanel Spacing="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock
+                            Grid.Row="0"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                            Margin="0,0,0,4"
+                            Text="💡 可用变量占位符" />
+                        
+                        <TextBlock Grid.Row="1" FontSize="12" Margin="0,0,0,2">
+                            <Run Text="$description_rough" 
+                                 FontWeight="SemiBold" 
+                                 Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <Run Text=" → 工具名称+参数定义（不含描述）" 
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </TextBlock>
+                        
+                        <TextBlock Grid.Row="2" FontSize="12">
+                            <Run Text="$description_detailed" 
+                                 FontWeight="SemiBold" 
+                                 Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <Run Text=" → 工具名称+参数定义+描述" 
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </TextBlock>
+                    </Grid>
+                </ikw:SimpleStackPanel>
+            </Border>
+
+            <!--  总工具调用上限设置  -->
+            <Border
+                Grid.Row="2"
+                Margin="0,0,0,12"
+                Padding="12,10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock
+                        Grid.Row="0"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                        Margin="0,0,0,8"
+                        Text="📊 总工具调用上限" />
+                    
+                    <ikw:SimpleStackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                        <Slider
+                            x:Name="TotalToolCallsSlider"
+                            MinWidth="200"
+                            IsSnapToTickEnabled="True"
+                            Maximum="50"
+                            Minimum="0"
+                            TickFrequency="1"
+                            TickPlacement="Both"
+                            Value="{Binding TotalToolCallsLimit}" />
+                        
+                        <TextBlock VerticalAlignment="Center" Width="120">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="0">
+                                            <Setter Property="Text" Value="无限（不启用上限）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="15">
+                                            <Setter Property="Text" Value="15 次（默认）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorAttentionBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="50">
+                                            <Setter Property="Text" Value="50 次（最大值）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                    <Setter Property="Text" Value="{Binding ElementName=TotalToolCallsSlider, Path=Value, StringFormat='{}{0} 次'}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        
+                        <TextBox 
+                            Width="50"
+                            VerticalAlignment="Center"
+                            Text="{Binding ElementName=TotalToolCallsSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </ikw:SimpleStackPanel>
+                </Grid>
+            </Border>
+
+            <!--  连续调用上限设置  -->
+            <Border
+                Grid.Row="3"
+                Margin="0,0,0,12"
+                Padding="12,10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock
+                        Grid.Row="0"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                        Margin="0,0,0,8"
+                        Text="🔄 同一工具连续调用上限（包括搜索工具）" />
+                    
+                    <ikw:SimpleStackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                        <Slider
+                            x:Name="ConsecutiveLimitSlider"
+                            MinWidth="200"
+                            IsSnapToTickEnabled="True"
+                            Maximum="10"
+                            Minimum="0"
+                            TickFrequency="1"
+                            TickPlacement="Both"
+                            Value="{Binding ConsecutiveToolLimit}" />
+                        
+                        <TextBlock VerticalAlignment="Center" Width="120">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="0">
+                                            <Setter Property="Text" Value="无限（不启用上限）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="1">
+                                            <Setter Property="Text" Value="1 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="2">
+                                            <Setter Property="Text" Value="2 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="3">
+                                            <Setter Property="Text" Value="3 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="4">
+                                            <Setter Property="Text" Value="4 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="5">
+                                            <Setter Property="Text" Value="5 次（默认）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorAttentionBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="6">
+                                            <Setter Property="Text" Value="6 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="7">
+                                            <Setter Property="Text" Value="7 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="8">
+                                            <Setter Property="Text" Value="8 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="9">
+                                            <Setter Property="Text" Value="9 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="10">
+                                            <Setter Property="Text" Value="10 次" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        
+                        <TextBox 
+                            Width="50"
+                            VerticalAlignment="Center"
+                            Text="{Binding ElementName=ConsecutiveLimitSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </ikw:SimpleStackPanel>
+                </Grid>
+            </Border>
+
+            <!--  工具结果显示模式  -->
+            <Border
+                Grid.Row="4"
+                Margin="0,0,0,12"
+                Padding="12,10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock
+                        Grid.Row="0"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                        Margin="0,0,0,8"
+                        Text="📋 工具结果显示模式" />
+                    
+                    <ikw:SimpleStackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                        <ComboBox 
+                            MinWidth="150"
+                            ItemsSource="{Binding ToolResultDisplayModeOptions}"
+                            SelectedValuePath="Mode"
+                            SelectedValue="{Binding SelectedToolResultDisplayMode, Mode=TwoWay}"
+                            DisplayMemberPath="DisplayName"/>
+                        
+                        <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedToolResultDisplayMode}" Value="Disabled">
+                                            <Setter Property="Text" Value="不显示工具结果和内联" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedToolResultDisplayMode}" Value="Minimal">
+                                            <Setter Property="Text" Value="仅内联显示工具名" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedToolResultDisplayMode}" Value="Mixed">
+                                            <Setter Property="Text" Value="内联+截断显示结果" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedToolResultDisplayMode}" Value="Detailed">
+                                            <Setter Property="Text" Value="内联+完整显示结果" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                    <Setter Property="Text" Value="请选择显示模式" />
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </ikw:SimpleStackPanel>
+                </Grid>
+            </Border>
+
+            <!--  显示工具链开关  -->
+            <Border
+                Grid.Row="5"
+                Margin="0,0,0,12"
+                Padding="12,10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <ikw:SimpleStackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12">
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                            Text="⛓️ 显示工具链" 
+                            VerticalAlignment="Center"/>
+                        
+                        <ui:ToggleSwitch 
+                            IsOn="{Binding EnableToolChainDisplay, Mode=TwoWay}"
+                            VerticalAlignment="Center">
+                            <ui:ToggleSwitch.OnContent>
+                                <Grid/>
+                            </ui:ToggleSwitch.OnContent>
+                            <ui:ToggleSwitch.OffContent>
+                                <Grid/>
+                            </ui:ToggleSwitch.OffContent>
+                        </ui:ToggleSwitch>
+                        
+                        <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EnableToolChainDisplay}" Value="True">
+                                            <Setter Property="Text" Value="已启用" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding EnableToolChainDisplay}" Value="False">
+                                            <Setter Property="Text" Value="已禁用" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </ikw:SimpleStackPanel>
+                </Grid>
+            </Border>
+
+            <!--  预览切换按钮  -->
+            <Button Grid.Row="6" Margin="0,0,0,8" HorizontalAlignment="Left" Command="{Binding TogglePreviewCommand}" FontSize="12">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Content" Value="👁️ 显示预览" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowPreview}" Value="True">
+                                <Setter Property="Content" Value="👁️ 隐藏预览" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            
+            <!--  预览区域  -->
+            <Border
+                Grid.Row="7"
+                Margin="0,0,0,12"
+                Padding="12"
+                Background="{DynamicResource LayerFillColorAltBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Visibility="{Binding ShowPreview, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock
+                        Grid.Row="0"
+                        Text="💡 预览（变量替换后的效果）"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Margin="0,0,0,8" />
+                    
+                    <ScrollViewer Grid.Row="1" MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                        <TextBlock
+                            Text="{Binding PreviewText}"
+                            FontSize="11"
+                            FontFamily="Consolas, Monaco, monospace"
+                            TextWrapping="Wrap"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  内容编辑  -->
+            <Border
+                Grid.Row="8"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock
+                        Grid.Row="0"
+                        Text="📝 提示词编辑"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Margin="12,8,12,4" />
+                    
+                    <TextBox
+                        x:Name="PromptTextBox"
+                        Grid.Row="1"
+                        Padding="12"
+                        AcceptsReturn="True"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        FontSize="13"
+                        FontFamily="Consolas, Monaco, monospace"
+                        Text="{Binding CurrentPrompt, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto" />
+                    
+                    <!--  验证警告（无变量时显示）  -->
+                    <Border
+                        Grid.Row="2"
+                        Visibility="{Binding ShowValidationWarning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Margin="12,0,12,12"
+                        Padding="10,8"
+                        Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                        BorderBrush="{DynamicResource SystemFillColorCautionBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                            TextWrapping="Wrap"
+                            Text="⚠️ 提示词中未包含变量占位符（$description_rough 或 $description_detailed），系统将不会插入工具列表。确定要保存吗？" />
+                    </Border>
+                </Grid>
+            </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!--  底部按钮  -->
+        <ikw:SimpleStackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,16,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="12">
+            <Button
+                MinWidth="100"
+                Padding="16,8"
+                Command="{Binding ResetToDefaultCommand}"
+                Content="重置为默认"
+                FontSize="13" />
+            <Button
+                MinWidth="90"
+                Padding="16,8"
+                Command="{Binding SaveCommand}"
+                Content="保存"
+                FontSize="13"
+                FontWeight="Medium"
+                IsDefault="True"
+                Style="{StaticResource AccentButtonStyle}" />
+            <Button
+                MinWidth="90"
+                Padding="16,8"
+                Command="{Binding CancelCommand}"
+                Content="取消"
+                FontSize="13"
+                IsCancel="True" />
+        </ikw:SimpleStackPanel>
+    </Grid>
+</Window>

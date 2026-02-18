@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <RepositoryUrl>https://github.com/SwiftFloatFlow/STranslate.Plugin.DeepSeek.MCP</RepositoryUrl>
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <UseWPF>true</UseWPF>
+        <AssemblyName>STranslate.Plugin.DeepSeek.MCP</AssemblyName>
+        <AssemblyTitle>DeepSeekMCP</AssemblyTitle>
+        <AssemblyProduct>DeepSeekMCP</AssemblyProduct>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!--// 统一输出路径到项目目录下的artifacts文件夹 //-->
+        <OutputPath>$(MSBuildProjectDirectory)\artifacts\$(Configuration)\</OutputPath>
+        <DebugType>portable</DebugType>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <Optimize>false</Optimize>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>TRACE</DefineConstants>
+        <!--// 编译后打包为插件 //-->
+        <EnableAutoPackage>true</EnableAutoPackage>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="Languages\*.*">
+            <Generator>MSBuild:Compile</Generator>
+            <SubType>Designer</SubType>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="icon.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="plugin.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="STranslate.Plugin" Version="1.0.5" />
+        <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.6" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
+    </ItemGroup>
+
+</Project>

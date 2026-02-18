@@ -1,0 +1,664 @@
+<UserControl
+    x:Class="STranslate.Plugin.Translate.DeepSeek.View.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:plugin="clr-namespace:STranslate.Plugin;assembly=STranslate.Plugin"
+    xmlns:s="https://github.com/zggsong/2022/xaml"
+    xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+    xmlns:local="clr-namespace:STranslate.Plugin.Translate.DeepSeek"
+    xmlns:converters="clr-namespace:STranslate.Plugin.Translate.DeepSeek.Converters"
+    xmlns:vm="clr-namespace:STranslate.Plugin.Translate.DeepSeek.ViewModel"
+    d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:StrategyToNameConverter x:Key="StrategyToNameConverter"/>
+        <converters:StrategyToDescriptionConverter x:Key="StrategyToDescriptionConverter"/>
+        <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
+        <converters:PromptWithStrategyConverter x:Key="PromptWithStrategyConverter"/>
+        <local:BoolToDescriptionConverter x:Key="BoolToDescriptionConverter"/>
+        
+        <Style x:Key="ToolEnableButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        
+        <!-- Toggle Switch Style for CheckBox -->
+        <Style x:Key="ToggleSwitchCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border Width="44" Height="24" CornerRadius="12" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="2">
+                            <Ellipse Width="18" Height="18" Fill="White" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="2,0">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform X="0"/>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=CheckBox}}" Value="True">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="#CCCCCC"/>
+            <Setter Property="BorderBrush" Value="#999999"/>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorSuccessBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <ikw:SimpleStackPanel Spacing="12">
+        <!--  API URL 配置  -->
+        <ui:SettingsCard Description="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Url_Description}" Header="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Url}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Globe_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+            <TextBox MinWidth="300" ui:ControlHelper.PlaceholderText="https://api.deepseek.com" Text="{Binding Url}" />
+        </ui:SettingsCard>
+
+        <!--  API Key 配置  -->
+        <ui:SettingsCard Header="{DynamicResource STranslate_Plugin_Translate_DeepSeek_ApiKey}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Key_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+            <PasswordBox
+                MinWidth="300"
+                MaxWidth="400"
+                plugin:PasswordBoxAssistant.Attach="True"
+                plugin:PasswordBoxAssistant.Password="{Binding ApiKey}"
+                ui:ControlHelper.PlaceholderText="API 密钥" />
+        </ui:SettingsCard>
+
+        <!--  Model 配置  -->
+        <ui:SettingsCard Header="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Model}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon FontFamily="{StaticResource {x:Static ui:ThemeKeys.FluentSystemIconsKey}}" Glyph="&#xF0797;" />
+            </ui:SettingsCard.HeaderIcon>
+            <ComboBox
+                MinWidth="200"
+                IsEditable="True"
+                ItemsSource="{Binding Models}"
+                SelectedItem="{Binding Model, Mode=TwoWay}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="LostFocus">
+                        <i:InvokeCommandAction Command="{Binding AddModelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=Text}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding}" Margin="0,0,8,0" />
+                            <Button
+                                Grid.Column="1"
+                                Margin="4,0,0,0"
+                                Padding="4"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{Binding DataContext.DeleteModelCommand, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                CommandParameter="{Binding}">
+                                <ui:FontIcon
+                                    FontSize="{DynamicResource STControlFontSize12}"
+                                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                    Icon="{x:Static ui:FluentSystemIcons.Delete_24_Regular}" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </ui:SettingsCard>
+
+        <!--  提示词选择和编辑  -->
+        <ui:SettingsCard Description="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Description}" Header="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Header}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Chat_20_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- 第一行：提示词选择 -->
+                <ikw:SimpleStackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="76,0,0,0">
+                    <!-- 当前选中提示词的策略标签（实时显示） - 移到前面 -->
+                    <Border 
+                        Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}" 
+                        CornerRadius="4" 
+                        Padding="6,2"
+                        VerticalAlignment="Center">
+                        <TextBlock 
+                            Text="{Binding SelectedPromptStrategyText}"
+                            Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
+                    </Border>
+                    
+                    <!-- 提示词选择下拉框（简化显示，不带策略标签） -->
+                    <ComboBox
+                        x:Name="PromptComboBox"
+                        MinWidth="120"
+                        ui:ControlHelper.PlaceholderText="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder}"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding Main.Prompts}"
+                        SelectedItem="{Binding Main.SelectedPrompt, Mode=TwoWay}" />
+
+                    <!-- 编辑提示词按钮 - 增加宽度，更换图标避免重复 -->
+                    <Button 
+                        Command="{Binding EditPromptCommand}" 
+                        ToolTip="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip}"
+                        IsEnabled="{Binding Main.SelectedPrompt, Converter={StaticResource NullToBoolConverter}}"
+                        MinWidth="100">
+                        <ui:IconAndText Content="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content}" Icon="{x:Static ui:FluentSystemIcons.Compose_24_Regular}" />
+                    </Button>
+                </ikw:SimpleStackPanel>
+                
+                <!-- 第二行：MCP策略选择和编辑 -->
+                <ikw:SimpleStackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="83,10,0,0">
+                    <!-- 占位符，与第一行的[工具强制]标签对齐 -->
+                    <Border 
+                        Background="Transparent" 
+                        CornerRadius="4" 
+                        Padding="6,2"
+                        VerticalAlignment="Center">
+                        <TextBlock 
+                            Text="MCP策略"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    </Border>
+                    
+                    <!-- 策略选择下拉框 -->
+                    <ComboBox 
+                        MinWidth="120"
+                        ItemsSource="{Binding PromptStrategyOptions}"
+                        SelectedItem="{Binding SelectedPromptStrategy, Mode=TwoWay}"
+                        IsEnabled="{Binding EnableMcp}"
+                        DisplayMemberPath="Name"
+                        ui:ControlHelper.PlaceholderText="选择策略" />
+                    
+                    <!-- 编辑策略提示词按钮 -->
+                    <Button 
+                        Command="{Binding EditStrategyPromptCommand}"
+                        ToolTip="编辑策略系统提示词"
+                        IsEnabled="{Binding EnableMcp}"
+                        MinWidth="100">
+                        <ui:IconAndText Content="编辑策略" Icon="{x:Static ui:FluentSystemIcons.Code_24_Regular}" />
+                    </Button>
+                </ikw:SimpleStackPanel>
+            </Grid>
+        </ui:SettingsCard>
+
+        <!--  温度控制  -->
+        <ui:SettingsCard Description="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Temperature_Description}" Header="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Temperature}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Temperature_20_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                <Slider
+                    x:Name="PART_TempSlider"
+                    MinWidth="200"
+                    IsSnapToTickEnabled="True"
+                    Maximum="2.0"
+                    Minimum="0.0"
+                    TickFrequency="0.1"
+                    TickPlacement="Both"
+                    Value="{Binding Temperature}" />
+
+                <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=PART_TempSlider, Path=Value, StringFormat=F1}" />
+            </ikw:SimpleStackPanel>
+        </ui:SettingsCard>
+
+        <!--  测试连接  -->
+        <ui:SettingsCard Description="测试 API 连接和配置是否正确" Header="测试连接">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CheckmarkCircle_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
+                <Border>
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4" />
+                            <Setter Property="Padding" Value="8,4" />
+                            <Setter Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SystemFillColorAttentionBackgroundBrushKey}}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ValidateResult}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="{DynamicResource STControlFontSize12}"
+                        Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                        Text="{Binding ValidateResult}" />
+                </Border>
+
+                <Button Command="{Binding ValidateCommand}" Style="{StaticResource AccentButtonStyle}">
+                    <ui:IconAndText Content="测试连接" Icon="{x:Static ui:FluentSystemIcons.Play_24_Regular}" />
+                </Button>
+            </ikw:SimpleStackPanel>
+        </ui:SettingsCard>
+
+        <!--  命令系统卡片（独立，不受MCP控制）  -->
+        <ui:SettingsCard Description="命令系统快捷指令，在翻译输入框中输入命令即可执行" Header="命令系统">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Code_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
+                <ui:ToggleSwitch 
+                    IsOn="{Binding EnableCommandSystem, Mode=TwoWay}"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center">
+                    <ui:ToggleSwitch.OnContent>
+                        <Grid/>
+                    </ui:ToggleSwitch.OnContent>
+                    <ui:ToggleSwitch.OffContent>
+                        <Grid/>
+                    </ui:ToggleSwitch.OffContent>
+                </ui:ToggleSwitch>
+                <TextBlock 
+                    Text="{Binding EnableCommandSystem, Converter={StaticResource BoolToDescriptionConverter}}"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            </ikw:SimpleStackPanel>
+        </ui:SettingsCard>
+
+        <!--  命令列表卡片  -->
+        <ui:SettingsCard Description="命令系统快捷指令，在翻译输入框中输入以下命令即可执行" Header="命令列表">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Code_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <Grid IsEnabled="{Binding EnableCommandSystem}">
+                <Grid.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="FontSize" Value="13"/>
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!--  表头  -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="中文命令" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="英文命令" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="功能描述" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                
+                <!--  命令1：查看当前  -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="/当前" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="/now" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="查看当前提示词的策略、工具结果模式和工具链状态" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令2：切换策略  -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="/切换 [策略]" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="/switch [策略]" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="切换当前提示词的MCP策略" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令3：查看状态  -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="/状态" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="/status" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="查看MCP服务状态和服务器列表" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令4：切换MCP  -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="/mcp" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="/mcp" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="开启或关闭MCP服务功能" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令5：切换工具链  -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="/工具链" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="/chain" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="5" Grid.Column="2" Text="开启或关闭当前策略的工具链显示" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令6：工具结果  -->
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="/工具结果 [模式]" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="/result [mode]" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="6" Grid.Column="2" Text="查看或切换当前策略的工具结果显示模式" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,6"/>
+                
+                <!--  命令7：帮助  -->
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="/帮助" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
+                <TextBlock Grid.Row="7" Grid.Column="1" Text="/help" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
+                <TextBlock Grid.Row="7" Grid.Column="2" Text="显示命令帮助信息" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            </Grid>
+        </ui:SettingsCard>
+
+        <!--  MCP服务功能卡片  -->
+        <ui:SettingsCard Description="控制 MCP 功能的总开关，设置日志级别" Header="MCP服务功能">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Power_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <Grid>
+                <Grid.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                        <Setter Property="Margin" Value="16,0,0,0"/>
+                        <Setter Property="Width" Value="70"/>
+                        <Setter Property="TextAlignment" Value="Right"/>
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!--  启用/禁用  -->
+                <ui:ToggleSwitch 
+                    Grid.Row="0" Grid.Column="0"
+                    IsOn="{Binding EnableMcp, Mode=TwoWay}"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center">
+                    <ui:ToggleSwitch.OnContent>
+                        <Grid/>
+                    </ui:ToggleSwitch.OnContent>
+                    <ui:ToggleSwitch.OffContent>
+                        <Grid/>
+                    </ui:ToggleSwitch.OffContent>
+                </ui:ToggleSwitch>
+                <TextBlock 
+                    Grid.Row="0" Grid.Column="1"
+                    Text="{Binding EnableMcp, Converter={StaticResource BoolToDescriptionConverter}}"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                
+                <!--  日志级别  -->
+                <ComboBox 
+                    Grid.Row="1" Grid.Column="0"
+                    Width="140"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0"
+                    IsEnabled="{Binding EnableMcp}"
+                    SelectedIndex="{Binding LogLevel}">
+                    <ComboBoxItem Content="粗略" />
+                    <ComboBoxItem Content="中等" />
+                    <ComboBoxItem Content="详细" />
+                </ComboBox>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="日志级别" Margin="16,8,0,0"/>
+            </Grid>
+        </ui:SettingsCard>
+
+        <!--  MCP服务器配置总卡片  -->
+        <ui:SettingsCard Description="配置和管理多个MCP服务器" Header="MCP服务器配置">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Server_24_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <Grid Width="520" IsEnabled="{Binding EnableMcp}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!--  服务器选择和管理  -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="服务器配置:" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <ComboBox 
+                            Width="200" 
+                            ItemsSource="{Binding McpServers}" 
+                            SelectedIndex="{Binding CurrentServerIndex}"
+                            Margin="0,0,15,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type local:McpServerConfig}">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Ellipse Width="10" Height="10" Margin="0,0,15,0" VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Enabled}" Value="True">
+                                                            <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        
+                        <Button Command="{Binding AddNewServerCommand}" ToolTip="添加新服务器" Margin="0,0,4,0">
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Add_24_Regular}" />
+                        </Button>
+                        
+                        <Button Command="{Binding DuplicateCurrentServerCommand}" ToolTip="复制当前服务器" Margin="0,0,4,0">
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Copy_24_Regular}" />
+                        </Button>
+                        
+                        <Button Command="{Binding DeleteCurrentServerCommand}" ToolTip="删除当前服务器">
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Delete_24_Regular}" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+                        </Button>
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="2" IsOn="{Binding CurrentServerEnabled, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,15,0">
+                        <ui:ToggleSwitch.OnContent>
+                            <Grid/>
+                        </ui:ToggleSwitch.OnContent>
+                        <ui:ToggleSwitch.OffContent>
+                            <Grid/>
+                        </ui:ToggleSwitch.OffContent>
+                    </ui:ToggleSwitch>
+                </Grid>
+                
+                <!--  删除确认提示  -->
+                <TextBlock 
+                    Grid.Row="1"
+                    Text="{Binding DeleteConfirmText}" 
+                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                    FontWeight="Bold"
+                    Margin="0,0,0,8">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DeleteConfirmText}" Value="删除服务器？请再次点击删除！">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!--  服务器名称  -->
+                <Grid Grid.Row="2" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="服务器名称:" />
+                    <TextBox Grid.Column="1" 
+                             MaxLength="30"
+                             ui:ControlHelper.PlaceholderText="最多30个字符"
+                             Text="{Binding CurrentServerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+
+                <!--  服务器地址  -->
+                <Grid Grid.Row="3" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="服务器地址:" />
+                    <TextBox Grid.Column="1" ui:ControlHelper.PlaceholderText="https://mcp-server.example.com/mcp" Text="{Binding CurrentServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+
+                <!--  请求体  -->
+                <Grid Grid.Row="4" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="请求体:" />
+                    <PasswordBox
+                        Grid.Column="1"
+                        plugin:PasswordBoxAssistant.Attach="True"
+                        plugin:PasswordBoxAssistant.Password="{Binding CurrentServerApiKey, Mode=TwoWay}"
+                        ui:ControlHelper.PlaceholderText="Authorization=Bearer token" />
+                </Grid>
+
+                <!--  MCP工具列表下拉菜单  -->
+                <Grid Grid.Row="5" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="工具列表:" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <ComboBox 
+                        Grid.Column="1" 
+                        MinHeight="36"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        ItemsSource="{Binding McpTools}"
+                        SelectedItem="{Binding SelectedTool, Mode=TwoWay}"
+                        ui:ControlHelper.PlaceholderText="{Binding ToolListSummary}"
+                        SelectionChanged="OnToolSelectionChanged">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:ToggleSwitch 
+                                    Grid.Column="0"
+                                    IsOn="{Binding Enabled, Mode=TwoWay}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Left"
+                                    Width="55"
+                                    MinWidth="55"
+                                    MaxWidth="55"
+                                    Margin="0,0,0,0"
+                                    Toggled="OnToolToggleChanged">
+                                    <ui:ToggleSwitch.OnContent>
+                                        <Grid/>
+                                    </ui:ToggleSwitch.OnContent>
+                                    <ui:ToggleSwitch.OffContent>
+                                        <Grid/>
+                                    </ui:ToggleSwitch.OffContent>
+                                </ui:ToggleSwitch>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" Margin="8,0,8,0">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip MaxWidth="350">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,0,4" />
+                                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            
+            <!--  测试连接按钮和结果  -->
+            <Grid Grid.Row="6" Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0" Text="测试连接:" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Command="{Binding TestAndDiscoverToolsCommand}" Style="{StaticResource AccentButtonStyle}">
+                        <ui:IconAndText Content="测试连接" Icon="{x:Static ui:FluentSystemIcons.Play_24_Regular}" />
+                    </Button>
+                    
+                    <!--  测试结果（限制最大宽度，避免过长）  -->
+                    <Border Margin="12,0,0,0" MaxWidth="300">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4" />
+                                <Setter Property="Padding" Value="8,4" />
+                                <Setter Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SystemFillColorAttentionBackgroundBrushKey}}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding McpValidateResult}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="{DynamicResource STControlFontSize12}"
+                            Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                            Text="{Binding McpValidateResult}"
+                            TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </ui:SettingsCard>
+    </ikw:SimpleStackPanel>
+</UserControl>
