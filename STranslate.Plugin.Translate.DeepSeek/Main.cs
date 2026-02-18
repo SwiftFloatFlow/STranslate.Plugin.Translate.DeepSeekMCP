@@ -232,7 +232,8 @@ public class Main : LlmTranslatePluginBase
             foreach (var globalPrompt in globalPrompts)
             {
                 var prompt = globalPrompt.ToPrompt(true);
-                // Tag已在ToPrompt中设置
+                // 重置名称为原始名称（不包含ID），Tag已由SDK设置
+                prompt.Name = globalPrompt.Name;
                 Prompts.Add(prompt);
             }
             

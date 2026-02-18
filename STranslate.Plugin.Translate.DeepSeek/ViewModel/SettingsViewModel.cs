@@ -15,6 +15,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly IPluginContext _context;
     private readonly Settings _settings;
     private bool _isUpdating = false;
+    private bool _isUpdatingStrategy = false;  // 用于区分程序设置和用户选择
     private DispatcherTimer? _autoSaveTimer;
     private DispatcherTimer? _resultClearTimer;
     public Main Main { get; }
@@ -248,10 +249,13 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 SaveSettings();
                 return;
                 
-            // 提示词策略变更
+            // 提示词策略变更（仅用户选择时触发）
             case nameof(SelectedPromptStrategy):
-                SavePromptStrategy();
-                SaveSettings();
+                if (!_isUpdatingStrategy)
+                {
+                    SavePromptStrategy();
+                    SaveSettings();
+                }
                 return;
 
             // MCP测试结果 - 5秒后自动消失
@@ -342,8 +346,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         if (Main.SelectedPrompt == null)
         {
+            _isUpdatingStrategy = true;
             SelectedPromptStrategy = PromptStrategyOptions.First();
             SelectedPromptStrategyText = "";
+            _isUpdatingStrategy = false;
             return;
         }
 
@@ -353,8 +359,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             ? s 
             : McpToolStrategy.Disabled;
         
+        _isUpdatingStrategy = true;
         SelectedPromptStrategy = PromptStrategyOptions.FirstOrDefault(o => o.Strategy == strategy) 
             ?? PromptStrategyOptions.First();
+        _isUpdatingStrategy = false;
         
         // 更新策略显示文本
         UpdateStrategyDisplayText();
@@ -382,10 +390,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         
         var strategyText = PromptStrategyHelper.GetStrategyDisplayText(strategy);
         
-        // 全局提示词添加标识
+        // 全局提示词添加★标识
         if (Main.IsGlobalPrompt(Main.SelectedPrompt))
         {
-            SelectedPromptStrategyText = $"{strategyText} [全局]";
+            SelectedPromptStrategyText = $"{strategyText} ★";
         }
         else
         {

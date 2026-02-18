@@ -10,7 +10,7 @@
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_ApiKey_Description">Enter API Key</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Model">Select a model</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Header">Prompt Configuration</sys:String>
-    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">Select or edit the prompt template for translation, each prompt can be bound to an independent MCP strategy</sys:String>
+    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">Select or edit prompt templates, bind MCP strategies independently. ★ indicates global prompts</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder">Select a prompt template</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip">Edit Prompt</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content">Edit</sys:String>

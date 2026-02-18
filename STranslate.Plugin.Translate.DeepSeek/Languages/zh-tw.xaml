@@ -10,7 +10,7 @@
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_ApiKey_Description">輸入 API 金鑰</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Model">请選擇模型</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Header">提示詞配置</sys:String>
-    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">選擇或編輯翻譯使用的提示詞範本，可為每個提示詞獨立綁定 MCP 策略</sys:String>
+    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">選擇或編輯提示詞範本，可獨立綁定MCP策略，帶★為全局提示詞</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder">選擇提示詞範本</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip">編輯提示詞</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content">編輯</sys:String>
