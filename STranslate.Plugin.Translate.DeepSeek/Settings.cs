@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using STranslate.Plugin;
 
 namespace STranslate.Plugin.Translate.DeepSeek;
 
@@ -74,8 +75,13 @@ public class Settings
     public List<McpServerConfig> McpServers { get; set; } = [];
     public int CurrentServerIndex { get; set; } = 0;
 
-    // 提示词级 MCP 策略映射表（Key: 提示词名称, Value: 策略，默认为 Disabled）
+    // 提示词级 MCP 策略映射表（Key: 提示词ID, Value: 策略，默认为 Disabled）
     public Dictionary<string, McpToolStrategy> PromptStrategyMap { get; set; } = new();
+    
+    /// <summary>
+    /// 局部提示词名称到ID的映射（用于策略绑定）
+    /// </summary>
+    public Dictionary<string, string> PromptIdMap { get; set; } = new();
     
     // 策略自定义提示词（Key: 策略类型, Value: 自定义系统提示词）
     public Dictionary<McpToolStrategy, string> CustomStrategyPrompts { get; set; } = new();
@@ -149,8 +155,45 @@ public class Settings
             ConfigVersion = 2;
         }
         
-        // 未来的迁移逻辑可以在这里添加
-        // if (ConfigVersion < 3) { ... }
+        // 版本3：提示词策略映射迁移（名称 -> ID）
+        if (ConfigVersion < 3)
+        {
+            MigratePromptStrategyMapToIdBased();
+            ConfigVersion = 3;
+        }
+    }
+    
+    /// <summary>
+    /// 迁移提示词策略映射：从名称绑定迁移到ID绑定
+    /// </summary>
+    private void MigratePromptStrategyMapToIdBased()
+    {
+        var newMap = new Dictionary<string, McpToolStrategy>();
+        
+        foreach (var prompt in Prompts)
+        {
+            // 确保每个局部提示词都有ID（存储在PromptIdMap中）
+            if (!PromptIdMap.TryGetValue(prompt.Name, out var id))
+            {
+                id = Guid.NewGuid().ToString("N");
+                PromptIdMap[prompt.Name] = id;
+            }
+            
+            // 设置来源标识
+            if (prompt.GetTag() == null)
+            {
+                prompt.SetTag("Local");
+            }
+            
+            // 迁移策略映射：尝试用名称查找旧映射，迁移到ID键
+            if (PromptStrategyMap.TryGetValue(prompt.Name, out var strategy))
+            {
+                newMap[id] = strategy;
+            }
+        }
+        
+        // 替换映射表
+        PromptStrategyMap = newMap;
     }
 }
 

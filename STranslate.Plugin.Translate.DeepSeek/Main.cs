@@ -19,7 +19,51 @@ public class Main : LlmTranslatePluginBase
     private McpToolCache? _toolCache;
     private ConcurrentToolExecutor? _toolExecutor;
     private McpClientPool? _clientPool;
-    private readonly SemaphoreSlim _translationSemaphore = new(5, 5); // 限制最大5个并发翻译请求
+    private readonly SemaphoreSlim _translationSemaphore = new(5, 5);
+
+    /// <summary>
+    /// 判断提示词是否为全局提示词
+    /// </summary>
+    public static bool IsGlobalPrompt(Prompt prompt)
+    {
+        return prompt.IsGlobalPrompt();
+    }
+
+    /// <summary>
+    /// 获取提示词的显示名称（带来源标识）
+    /// </summary>
+    public static string GetPromptDisplayName(Prompt prompt)
+    {
+        return prompt.GetPromptDisplayName();
+    }
+
+    /// <summary>
+    /// 获取提示词的策略映射键（统一使用ID）
+    /// </summary>
+    /// <param name="prompt">提示词</param>
+    /// <param name="promptIdMap">局部提示词名称到ID的映射表</param>
+    /// <returns>策略键（ID）</returns>
+    public static string GetStrategyKey(Prompt prompt, Dictionary<string, string> promptIdMap)
+    {
+        var tag = prompt.GetTag()?.ToString();
+        
+        // 全局提示词：从Tag中提取ID
+        if (tag?.StartsWith("Global:") == true)
+        {
+            return tag.Substring(7);  // 去掉 "Global:" 前缀
+        }
+        
+        // 局部提示词：从映射表中获取ID
+        if (promptIdMap.TryGetValue(prompt.Name, out var id))
+        {
+            return id;
+        }
+        
+        // 如果映射表中没有，生成新ID并返回
+        var newId = Guid.NewGuid().ToString("N");
+        promptIdMap[prompt.Name] = newId;
+        return newId;
+    }
 
     /// <summary>
     /// 根据日志级别判断是否允许记录日志
@@ -56,10 +100,11 @@ public class Main : LlmTranslatePluginBase
         }
 
         // 第2层：检查提示词是否有绑定的策略，默认为 Disabled
-        if (Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var promptStrategy))
+        var strategyKey = GetStrategyKey(currentPrompt, Settings.PromptIdMap);
+        if (Settings.PromptStrategyMap.TryGetValue(strategyKey, out var promptStrategy))
         {
             if (ShouldLog(1))
-                Context.Logger.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}' 使用绑定策略: {promptStrategy}");
+                Context.Logger.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}'(ID:{strategyKey[..8]}...) 使用绑定策略: {promptStrategy}");
             return promptStrategy;
         }
 
@@ -72,7 +117,10 @@ public class Main : LlmTranslatePluginBase
     public override void SelectPrompt(Prompt? prompt)
     {
         base.SelectPrompt(prompt);
-        Settings.Prompts = [.. Prompts.Select(p => p.Clone())];
+        
+        // 只保存局部提示词
+        var localPrompts = Prompts.Where(p => !IsGlobalPrompt(p)).Select(p => p.Clone()).ToList();
+        Settings.Prompts = localPrompts;
         Context.SaveSettingStorage<Settings>();
     }
 
@@ -160,14 +208,56 @@ public class Main : LlmTranslatePluginBase
         Context = context;
         Settings = context.LoadSettingStorage<Settings>();
         
-        // 执行配置迁移
+        // 执行配置迁移（包括名称->ID的策略迁移）
         Settings.Migrate();
         
-        Settings.Prompts.ForEach(Prompts.Add);
+        // 加载局部提示词
+        foreach (var prompt in Settings.Prompts)
+        {
+            // 确保每个局部提示词都有ID（存储在PromptIdMap中）
+            if (!Settings.PromptIdMap.TryGetValue(prompt.Name, out var id))
+            {
+                id = Guid.NewGuid().ToString("N");
+                Settings.PromptIdMap[prompt.Name] = id;
+            }
+            if (prompt.GetTag() == null)
+            {
+                prompt.SetTag("Local");
+            }
+            Prompts.Add(prompt);
+        }
+        
+        // 加载全局提示词
+        LoadGlobalPrompts();
 
         if (Settings.EnableMcp && Settings.McpServers.Count > 0)
         {
             InitializeMcpClients();
+        }
+    }
+
+    /// <summary>
+    /// 加载全局提示词并合并到 Prompts 列表
+    /// </summary>
+    private void LoadGlobalPrompts()
+    {
+        try
+        {
+            var globalPrompts = Context.GetGlobalPrompts();
+            
+            foreach (var globalPrompt in globalPrompts)
+            {
+                var prompt = globalPrompt.ToPrompt(true);
+                // Tag已在ToPrompt中设置
+                Prompts.Add(prompt);
+            }
+            
+            if (ShouldLog(1) && globalPrompts.Count > 0)
+                Context.Logger.LogInformation("[提示词] 已加载 {Count} 个全局提示词", globalPrompts.Count);
+        }
+        catch (Exception ex)
+        {
+            Context.Logger.LogError(ex, "[提示词] 加载全局提示词失败");
         }
     }
 

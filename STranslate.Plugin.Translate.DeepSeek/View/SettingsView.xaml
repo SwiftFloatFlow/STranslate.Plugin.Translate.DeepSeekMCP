@@ -22,6 +22,7 @@
         <converters:StrategyToDescriptionConverter x:Key="StrategyToDescriptionConverter"/>
         <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
         <converters:PromptWithStrategyConverter x:Key="PromptWithStrategyConverter"/>
+        <converters:PromptDisplayNameConverter x:Key="PromptDisplayNameConverter"/>
         <local:BoolToDescriptionConverter x:Key="BoolToDescriptionConverter"/>
         
         <Style x:Key="ToolEnableButtonStyle" TargetType="Button">
@@ -169,20 +170,25 @@
                             Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
                     </Border>
                     
-                    <!-- 提示词选择下拉框（简化显示，不带策略标签） -->
+                    <!-- 提示词选择下拉框（使用转换器显示名称） -->
                     <ComboBox
                         x:Name="PromptComboBox"
                         MinWidth="120"
                         ui:ControlHelper.PlaceholderText="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder}"
-                        DisplayMemberPath="Name"
                         ItemsSource="{Binding Main.Prompts}"
-                        SelectedItem="{Binding Main.SelectedPrompt, Mode=TwoWay}" />
+                        SelectedItem="{Binding Main.SelectedPrompt, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ., Converter={StaticResource PromptDisplayNameConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                    <!-- 编辑提示词按钮 - 增加宽度，更换图标避免重复 -->
+                    <!-- 编辑提示词按钮（全局提示词不可编辑） -->
                     <Button 
                         Command="{Binding EditPromptCommand}" 
                         ToolTip="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip}"
-                        IsEnabled="{Binding Main.SelectedPrompt, Converter={StaticResource NullToBoolConverter}}"
+                        IsEnabled="{Binding CanEditSelectedPrompt}"
                         MinWidth="100">
                         <ui:IconAndText Content="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content}" Icon="{x:Static ui:FluentSystemIcons.Compose_24_Regular}" />
                     </Button>

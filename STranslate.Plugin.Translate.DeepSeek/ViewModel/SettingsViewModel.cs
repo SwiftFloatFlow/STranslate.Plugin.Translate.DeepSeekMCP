@@ -313,11 +313,23 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EditPrompt()
     {
+        // 全局提示词不可编辑
+        if (Main.SelectedPrompt != null && Main.IsGlobalPrompt(Main.SelectedPrompt))
+        {
+            _context.Logger.LogWarning("[提示词] 全局提示词不可编辑");
+            return;
+        }
+        
         var dialog = _context.GetPromptEditWindow(Main.Prompts);
 
         if (dialog.ShowDialog() == true)
         {
-            _settings.Prompts = [.. Main.Prompts.Select(p => p.Clone())];
+            // 只保存局部提示词
+            var localPrompts = Main.Prompts
+                .Where(p => !Main.IsGlobalPrompt(p))
+                .Select(p => p.Clone())
+                .ToList();
+            _settings.Prompts = localPrompts;
             _context.SaveSettingStorage<Settings>();
             Main.SelectedPrompt = Main.Prompts.FirstOrDefault(p => p.IsEnabled);
         }
@@ -335,12 +347,21 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // 从映射表中获取该提示词的策略（默认为 Disabled）
-        var strategy = _settings.PromptStrategyMap.TryGetValue(Main.SelectedPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
-        SelectedPromptStrategy = PromptStrategyOptions.FirstOrDefault(o => o.Strategy == strategy) ?? PromptStrategyOptions.First();
+        // 统一使用ID获取策略
+        var strategyKey = Main.GetStrategyKey(Main.SelectedPrompt, _settings.PromptIdMap);
+        var strategy = _settings.PromptStrategyMap.TryGetValue(strategyKey, out var s) 
+            ? s 
+            : McpToolStrategy.Disabled;
+        
+        SelectedPromptStrategy = PromptStrategyOptions.FirstOrDefault(o => o.Strategy == strategy) 
+            ?? PromptStrategyOptions.First();
         
         // 更新策略显示文本
         UpdateStrategyDisplayText();
+        
+        // 通知UI更新
+        OnPropertyChanged(nameof(IsSelectedPromptGlobal));
+        OnPropertyChanged(nameof(CanEditSelectedPrompt));
     }
     
     /// <summary>
@@ -354,8 +375,22 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
         
-        var strategy = _settings.PromptStrategyMap.TryGetValue(Main.SelectedPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
-        SelectedPromptStrategyText = PromptStrategyHelper.GetStrategyDisplayText(strategy);
+        var strategyKey = Main.GetStrategyKey(Main.SelectedPrompt, _settings.PromptIdMap);
+        var strategy = _settings.PromptStrategyMap.TryGetValue(strategyKey, out var s) 
+            ? s 
+            : McpToolStrategy.Disabled;
+        
+        var strategyText = PromptStrategyHelper.GetStrategyDisplayText(strategy);
+        
+        // 全局提示词添加标识
+        if (Main.IsGlobalPrompt(Main.SelectedPrompt))
+        {
+            SelectedPromptStrategyText = $"{strategyText} [全局]";
+        }
+        else
+        {
+            SelectedPromptStrategyText = strategyText;
+        }
     }
 
     /// <summary>
@@ -366,14 +401,16 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         if (Main.SelectedPrompt == null || SelectedPromptStrategy == null)
             return;
 
-        var promptName = Main.SelectedPrompt.Name;
+        // 统一使用ID作为键
+        var strategyKey = Main.GetStrategyKey(Main.SelectedPrompt, _settings.PromptIdMap);
         var newStrategy = SelectedPromptStrategy.Strategy;
         
         // 更新映射表
-        _settings.PromptStrategyMap[promptName] = newStrategy;
+        _settings.PromptStrategyMap[strategyKey] = newStrategy;
         _context.SaveSettingStorage<Settings>();
         
-        _context.Logger.LogInformation($"[提示词策略] 提示词 '{promptName}' 的策略已设置为: {PromptStrategyHelper.GetStrategyName(newStrategy)}");
+        var promptName = Main.SelectedPrompt.Name;
+        _context.Logger.LogInformation($"[提示词策略] 提示词 '{promptName}'(ID:{strategyKey[..8]}...) 的策略已设置为: {PromptStrategyHelper.GetStrategyName(newStrategy)}");
         
         // 立即更新显示文本（实时刷新）
         UpdateStrategyDisplayText();
@@ -720,6 +757,18 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     
     // 当前选中提示词的策略显示文本（用于UI标签显示）
     [ObservableProperty] public partial string SelectedPromptStrategyText { get; set; } = "";
+
+    /// <summary>
+    /// 当前选中的提示词是否为全局提示词
+    /// </summary>
+    public bool IsSelectedPromptGlobal => 
+        Main.SelectedPrompt != null && Main.IsGlobalPrompt(Main.SelectedPrompt);
+
+    /// <summary>
+    /// 当前选中的提示词是否可编辑
+    /// </summary>
+    public bool CanEditSelectedPrompt => 
+        Main.SelectedPrompt != null && !IsSelectedPromptGlobal;
 
     // 服务器列表管理
     [ObservableProperty] public partial ObservableCollection<McpServerConfig> McpServers { get; set; }
