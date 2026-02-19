@@ -246,30 +246,6 @@ public class Main : LlmTranslatePluginBase
     {
         try
         {
-            // 【详细日志】显示接收到的全局提示词数据
-            if (ShouldLog(2))
-            {
-                Context.Logger.LogInformation("[全局提示词-详细] 收到全局提示词变更通知，共 {Count} 个", globalPrompts.Count);
-                foreach (var gp in globalPrompts)
-                {
-                    Context.Logger.LogInformation("[全局提示词-详细] ID={Id}, Name={Name}, Items数量={ItemCount}",
-                        gp.Id, gp.Name, gp.Items.Count);
-                    for (int i = 0; i < gp.Items.Count; i++)
-                    {
-                        var item = gp.Items[i];
-                        var contentPreview = item.Content.Length > 50 
-                            ? item.Content.Substring(0, 50) + "..." 
-                            : item.Content;
-                        Context.Logger.LogInformation("[全局提示词-详细]   Item[{Index}] Role={Role}, Content={Content}",
-                            i, item.Role, contentPreview);
-                    }
-                }
-            }
-            else if (ShouldLog(1))
-            {
-                Context.Logger.LogInformation("[全局提示词] 收到变更通知，共 {Count} 个全局提示词", globalPrompts.Count);
-            }
-            
             // 记录当前选中的全局提示词ID（如果有）
             string? selectedGlobalId = null;
             string? oldName = null;
@@ -280,9 +256,6 @@ public class Main : LlmTranslatePluginBase
                 {
                     selectedGlobalId = tag.Substring(7);
                     oldName = SelectedPrompt.Name;
-                    if (ShouldLog(2))
-                        Context.Logger.LogInformation("[全局提示词-详细] 当前选中全局提示词: ID={Id}, Name={Name}", 
-                            selectedGlobalId, oldName);
                 }
             }
             
@@ -461,31 +434,6 @@ public class Main : LlmTranslatePluginBase
         try
         {
             var globalPrompts = Context.GetGlobalPrompts();
-            
-            // 【详细日志】显示初始加载的全局提示词数据
-            if (ShouldLog(2))
-            {
-                Context.Logger.LogInformation("[全局提示词-详细] 初始化加载，从主软件获取 {Count} 个全局提示词", globalPrompts.Count);
-                foreach (var gp in globalPrompts)
-                {
-                    Context.Logger.LogInformation("[全局提示词-详细] ID={Id}, Name={Name}, Items数量={ItemCount}",
-                        gp.Id, gp.Name, gp.Items.Count);
-                    for (int i = 0; i < gp.Items.Count; i++)
-                    {
-                        var item = gp.Items[i];
-                        var contentPreview = item.Content.Length > 50 
-                            ? item.Content.Substring(0, 50) + "..." 
-                            : item.Content;
-                        Context.Logger.LogInformation("[全局提示词-详细]   Item[{Index}] Role={Role}, Content={Content}",
-                            i, item.Role, contentPreview);
-                    }
-                }
-            }
-            else if (ShouldLog(1))
-            {
-                Context.Logger.LogInformation("[全局提示词] 初始化加载，获取到 {Count} 个全局提示词", globalPrompts.Count);
-            }
-            
             int loadedCount = 0;
             int updatedCount = 0;
             
@@ -532,9 +480,8 @@ public class Main : LlmTranslatePluginBase
                 else
                 {
                     // 添加新的全局提示词
+                    // SDK 1.0.8+：ToPrompt() 已正确保持原始名称和Role
                     var prompt = globalPrompt.ToPrompt(true);
-                    // 重置名称为原始名称（不包含ID），Tag已由SDK设置
-                    prompt.Name = globalPrompt.Name;
                     Prompts.Add(prompt);
                     loadedCount++;
                 }
@@ -566,32 +513,20 @@ public class Main : LlmTranslatePluginBase
             if (ShouldLog(1) && (loadedCount > 0 || updatedCount > 0 || promptsToRemove.Count > 0))
                 Context.Logger.LogInformation("[提示词] 全局提示词同步完成: 新增 {Added} 个, 更新 {Updated} 个, 移除 {Removed} 个",
                     loadedCount, updatedCount, promptsToRemove.Count);
-            
-            // 【详细日志】显示同步后的最终状态
-            if (ShouldLog(2))
-            {
-                var globalPromptsInList = Prompts.Where(p => IsGlobalPrompt(p)).ToList();
-                Context.Logger.LogInformation("[全局提示词-详细] 同步完成后，插件中共有 {Count} 个全局提示词", globalPromptsInList.Count);
-                foreach (var gp in globalPromptsInList)
-                {
-                    Context.Logger.LogInformation("[全局提示词-详细]   - {Name} (Items: {ItemCount})", 
-                        gp.Name, gp.Items.Count);
-                    for (int i = 0; i < gp.Items.Count; i++)
-                    {
-                        var item = gp.Items[i];
-                        var contentPreview = item.Content.Length > 30 
-                            ? item.Content.Substring(0, 30) + "..." 
-                            : item.Content;
-                        Context.Logger.LogInformation("[全局提示词-详细]     Item[{Index}] Role={Role}, Content={Content}",
-                            i, item.Role, contentPreview);
-                    }
-                }
-            }
         }
         catch (Exception ex)
         {
             Context.Logger.LogError(ex, "[提示词] 加载全局提示词失败");
         }
+    }
+    
+    /// <summary>
+    /// 判断提示词是否为全局提示词
+    /// </summary>
+    public static bool IsGlobalPrompt(Prompt? prompt)
+    {
+        var tag = prompt?.Tag?.ToString();
+        return tag?.StartsWith("Global:") == true;
     }
     
     /// <summary>
@@ -866,22 +801,6 @@ public class Main : LlmTranslatePluginBase
             {
                 allMessages.Add(new { role = "system", content = systemPrompt });
             }
-            // 【详细日志】记录使用的提示词消息
-            if (ShouldLog(2))
-            {
-                Context.Logger.LogInformation("[翻译-详细] 构建消息，共 {Count} 条提示词项", messages.Count);
-                int msgIndex = 0;
-                foreach (var msg in messages)
-                {
-                    var contentPreview = msg.Content.Length > 100 
-                        ? msg.Content.Substring(0, 100) + "..." 
-                        : msg.Content;
-                    Context.Logger.LogInformation("[翻译-详细]   Message[{Index}] Role={Role}, Content={Content}",
-                        msgIndex, msg.Role, contentPreview);
-                    msgIndex++;
-                }
-            }
-            
             foreach (var msg in messages)
             {
                 allMessages.Add(new { role = msg.Role, content = msg.Content });

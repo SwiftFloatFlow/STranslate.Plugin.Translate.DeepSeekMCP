@@ -80,8 +80,8 @@
             <Private>true</Private>
         </Reference>
         -->
-        <!-- 使用Fork版本的本地NuGet包 -->
-        <PackageReference Include="STranslate.Plugin" Version="1.2.0-fork" />
+        <!-- 使用更新后的NuGet包（SDK 1.0.8，修复了全局提示词Role问题） -->
+        <PackageReference Include="STranslate.Plugin" Version="1.0.8" />
         <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
     </ItemGroup>
