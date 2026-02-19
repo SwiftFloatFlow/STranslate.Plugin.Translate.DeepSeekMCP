@@ -17,7 +17,8 @@ docs/
   │   ├── mcp-client.md           # MCP客户端实现
   │   ├── tool-strategy.md        # 工具调用策略
   │   ├── mcp-tool-calling.md     # MCP工具调用详解
-  │   └── command-system.md       # 命令系统
+  │   ├── command-system.md       # 命令系统
+  │   └── global-prompts.md       # 全局提示词功能
 ├── guides/                      # 开发和维护指南
 │   ├── build-deploy.md         # 构建和部署
 │   ├── troubleshooting.md      # 故障排除
@@ -37,6 +38,7 @@ docs/
 | 修改设置界面 | [设置系统](./modules/settings-system.md) + [UI布局](./modules/ui-layout.md) |
 | 修改MCP功能 | [MCP客户端](./modules/mcp-client.md) + [工具策略](./modules/tool-strategy.md) |
 | 修改命令系统 | [命令系统](./modules/command-system.md) + [主逻辑模块](./modules/main-logic.md) |
+| 全局提示词 | [全局提示词功能](./modules/global-prompts.md) |
 | 构建项目 | [构建部署指南](./guides/build-deploy.md) |
 | 解决问题 | [故障排除](./guides/troubleshooting.md) |
 
@@ -82,6 +84,22 @@ docs/
 ### 5. UI布局
 - 主界面：`View/SettingsView.xaml`
 - 包含：服务器配置、工具列表、测试连接、命令系统开关等
+
+## 重要变更（v4.0+）
+
+### 架构变更
+- **新增全局提示词功能**：支持从主软件加载全局提示词
+  - 全局提示词显示★前缀标识
+  - 实时同步名称和prompt内容变更
+  - 使用ID绑定策略（避免名称变更导致策略丢失）
+  - 固定宽度下拉框（120px），超长名称自动截断
+- **新增实时同步机制**：通过主软件回调实现全局提示词实时同步
+
+### 文件变更
+- **新增** `docs/modules/global-prompts.md` - 全局提示词功能文档
+- **修改** `Main.cs` - 添加全局提示词加载、同步、刷新逻辑
+- **修改** `SettingsView.xaml` - 添加★前缀显示、固定宽度下拉框
+- **修改** `PromptDisplayNameConverter.cs` - 添加全局提示词前缀标识
 
 ## 重要变更（v3.0+）
 
@@ -135,5 +153,5 @@ docs/
 
 ---
 
-*最后更新：2026年2月16日*  
-*文档版本：v3.0*
+*最后更新：2026年2月19日*  
+*文档版本：v4.0*
