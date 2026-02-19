@@ -1,5 +1,6 @@
 using STranslate.Plugin.Translate.DeepSeek.View;
 using STranslate.Plugin.Translate.DeepSeek.ViewModel;
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -311,6 +312,20 @@ public class Main : LlmTranslatePluginBase
                             OnPropertyChanged(nameof(SelectedPrompt));
                         }
                     }
+                    
+                    // 更新提示词内容（Items）- 处理prompt修改的情况
+                    if (UpdatePromptItems(existingPrompt, globalPrompt.Items))
+                    {
+                        updatedCount++;
+                        if (ShouldLog(1))
+                            Context.Logger.LogInformation("[提示词] 全局提示词内容已更新: '{PromptName}'", globalPrompt.Name);
+                        
+                        // 如果当前选中的就是这个提示词，触发更新通知
+                        if (SelectedPrompt == existingPrompt)
+                        {
+                            OnPropertyChanged(nameof(SelectedPrompt));
+                        }
+                    }
                 }
                 else
                 {
@@ -362,6 +377,53 @@ public class Main : LlmTranslatePluginBase
         {
             Context.Logger.LogError(ex, "[提示词] 刷新全局提示词失败");
         }
+    }
+    
+    /// <summary>
+    /// 更新提示词的Items集合
+    /// </summary>
+    /// <param name="prompt">要更新的提示词</param>
+    /// <param name="newItems">新的Items集合</param>
+    /// <returns>是否有更新</returns>
+    private bool UpdatePromptItems(Prompt prompt, ObservableCollection<PromptItem> newItems)
+    {
+        // 比较现有的Items和新的Items是否相同
+        bool itemsChanged = false;
+        
+        // 如果数量不同，肯定有变化
+        if (prompt.Items.Count != newItems.Count)
+        {
+            itemsChanged = true;
+        }
+        else
+        {
+            // 逐条比较内容
+            for (int i = 0; i < prompt.Items.Count; i++)
+            {
+                var existingItem = prompt.Items[i];
+                var newItem = newItems[i];
+                
+                if (existingItem.Role != newItem.Role || 
+                    existingItem.Content != newItem.Content)
+                {
+                    itemsChanged = true;
+                    break;
+                }
+            }
+        }
+        
+        // 如果有变化，更新Items
+        if (itemsChanged)
+        {
+            prompt.Items.Clear();
+            foreach (var item in newItems)
+            {
+                prompt.Items.Add(item.Clone());
+            }
+            return true;
+        }
+        
+        return false;
     }
 
     /// <summary>
