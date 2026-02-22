@@ -10,7 +10,7 @@
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_ApiKey_Description">输入 API 密钥</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Model">请选择模型</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Header">提示词配置</sys:String>
-    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">选择或编辑翻译使用的提示词模板，可为每个提示词独立绑定 MCP 策略</sys:String>
+    <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Description">选择或编辑翻译使用的提示词模板，可独立绑定MCP策略，带★为全局提示词</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder">选择提示词模板</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip">编辑提示词</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content">编辑</sys:String>

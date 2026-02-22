@@ -1,0 +1,100 @@
+﻿2026-02-19 15:02:26.706 [INF] [STranslate.App]: Begin STranslate startup ----------------------------------------------------
+2026-02-19 15:02:26.790 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.Baidu
+2026-02-19 15:02:26.794 [VRB] [STranslate.Core.PluginManager]: Found plugin: Baidu OCR v1.0.0 (ID: 64f812516673408ab5b59e56720bd641)
+2026-02-19 15:02:26.794 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.OpenAI
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Found plugin: OpenAI OCR v1.0.2 (ID: 8eb80c0391314256a4058b464d77946a)
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.WeChatBuiltIn
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Found plugin: WeChat OCR (Built-in) v1.0.0 (ID: 3410e7de989340938301abd6fcf8cc4b)
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.Baidu
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Found plugin: Baidu v1.0.0 (ID: 86ec10628e754d41921d24387ec6e815)
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.BigModel
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Found plugin: BigModel v1.0.2 (ID: 474b5fe844d9455ba0c59f75c1424f0d)
+2026-02-19 15:02:26.795 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.DeepL
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Found plugin: DeepL v1.0.0 (ID: 09d6beef9b1f4891a4a0d8a8dbf510d1)
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.GoogleBuiltIn
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Found plugin: Google Translate (Built-in) v1.0.0 (ID: 0b5d84917783415d865032f1d6e2877f)
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.ICibaBuiltIn
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Found plugin: iCIBA (Built-in) v1.0.0 (ID: 0f6892a390a543709926092aba510273)
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.MicrosoftBuiltIn
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Found plugin: Microsoft (Built-in) v1.0.0 (ID: 2d6f6831fd114463bfdebfd8ee85e549)
+2026-02-19 15:02:26.796 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.MTranServer
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Found plugin: MTranServer v1.0.0 (ID: 9e44abfa040e443c9ab48205683082f4)
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.OpenAI
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Found plugin: OpenAI v1.0.2 (ID: 76b14a8d707041c891a2dcd2f74be9c1)
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.TransmartBuiltIn
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Found plugin: Transmart (Built-in) v1.0.0 (ID: 2cc83275790ba8ce96b31c4fe0655743)
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.YandexBuiltIn
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Found plugin: Yandex (Built-in) v1.0.0 (ID: 2c1b2a2fa1e24ae79b7dc73bdea35159)
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.Youdao
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Found plugin: Youdao v1.0.0 (ID: 6d90a1ae6fce5fe776f57961c5b8eef7)
+2026-02-19 15:02:26.797 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Tts.MicrosoftEdge
+2026-02-19 15:02:26.798 [VRB] [STranslate.Core.PluginManager]: Found plugin: Edge TTS v1.0.0 (ID: 7a3ab25875294602b3afc4ae15fec627)
+2026-02-19 15:02:26.798 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Vocabulary.Eudict
+2026-02-19 15:02:26.798 [VRB] [STranslate.Core.PluginManager]: Found plugin: Eudict v1.0.0 (ID: d9537be74d23438ca581fd6d04e1d112)
+2026-02-19 15:02:26.798 [VRB] [STranslate.Core.PluginManager]: Loading plugin metadata from directory: C:\Users\ranfei\AppData\Roaming\STranslate\Plugins\STranslate.Plugin.Translate.DeepSeekMCP
+2026-02-19 15:02:26.798 [VRB] [STranslate.Core.PluginManager]: Found plugin: DeepSeekMCP v1.0.0 (ID: d99c702e39b44be5a9e49983ff0f4fff)
+2026-02-19 15:02:26.816 [INF] [STranslate.Core.PluginManager]: 插件加载完成: 总计 17 个插件，成功 17 个，失败 0 个
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]: 成功加载的插件列表:
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Baidu OCR v1.0.0 (ID: 64f812516673408ab5b59e56720bd641) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Ocr.Baidu
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ OpenAI OCR v1.0.2 (ID: 8eb80c0391314256a4058b464d77946a) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Ocr.OpenAI
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ WeChat OCR (Built-in) v1.0.0 (ID: 3410e7de989340938301abd6fcf8cc4b) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Ocr.WeChatBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Baidu v1.0.0 (ID: 86ec10628e754d41921d24387ec6e815) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.Baidu
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ BigModel v1.0.2 (ID: 474b5fe844d9455ba0c59f75c1424f0d) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.BigModel
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ DeepL v1.0.0 (ID: 09d6beef9b1f4891a4a0d8a8dbf510d1) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.DeepL
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Google Translate (Built-in) v1.0.0 (ID: 0b5d84917783415d865032f1d6e2877f) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.GoogleBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ iCIBA (Built-in) v1.0.0 (ID: 0f6892a390a543709926092aba510273) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.ICibaBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Microsoft (Built-in) v1.0.0 (ID: 2d6f6831fd114463bfdebfd8ee85e549) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.MicrosoftBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ MTranServer v1.0.0 (ID: 9e44abfa040e443c9ab48205683082f4) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.MTranServer
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ OpenAI v1.0.2 (ID: 76b14a8d707041c891a2dcd2f74be9c1) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.OpenAI
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Transmart (Built-in) v1.0.0 (ID: 2cc83275790ba8ce96b31c4fe0655743) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.TransmartBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Yandex (Built-in) v1.0.0 (ID: 2c1b2a2fa1e24ae79b7dc73bdea35159) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.YandexBuiltIn
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Youdao v1.0.0 (ID: 6d90a1ae6fce5fe776f57961c5b8eef7) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Translate.Youdao
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Edge TTS v1.0.0 (ID: 7a3ab25875294602b3afc4ae15fec627) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Tts.MicrosoftEdge
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ Eudict v1.0.0 (ID: d9537be74d23438ca581fd6d04e1d112) | 类型: 预装插件 | 作者: zggsong | 程序集: STranslate.Plugin.Vocabulary.Eudict
+2026-02-19 15:02:26.817 [INF] [STranslate.Core.PluginManager]:   ✓ DeepSeekMCP v1.0.0 (ID: d99c702e39b44be5a9e49983ff0f4fff) | 类型: 用户插件 | 作者: SwiftFloatFlow | 程序集: STranslate.Plugin.DeepSeek.MCP
+2026-02-19 15:02:26.866 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 初始化加载，从主软件获取 1 个全局提示词
+2026-02-19 15:02:26.867 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] ID=205bbf1d5c1748419a567d73e93271ad, Name=测试, Items数量=2
+2026-02-19 15:02:26.867 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:02:26.867 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[1] Role=user, Content=$content
+2026-02-19 15:02:26.868 [INF] [STranslate.Plugin.DeepSeek.MCP]: [提示词] 全局提示词同步完成: 新增 1 个, 更新 0 个, 移除 0 个
+2026-02-19 15:02:26.868 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 同步完成后，插件中共有 1 个全局提示词
+2026-02-19 15:02:26.868 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   - 测试 (Items: 2)
+2026-02-19 15:02:26.868 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:02:26.868 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[1] Role=user, Content=$content
+2026-02-19 15:02:26.870 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] 连接管理器初始化完成，HTTP/2连接池已启用
+2026-02-19 15:02:26.871 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] 工具缓存初始化完成，默认TTL: 5分钟
+2026-02-19 15:02:26.872 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] 连接池初始化完成，空闲超时: 300s
+2026-02-19 15:02:26.872 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] 创建客户端连接服务器: MCP-智能路由
+2026-02-19 15:02:26.872 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] SDK客户端初始化完成，服务器: MCP-智能路由, HTTP/2: 已启用
+2026-02-19 15:02:26.872 [INF] [STranslate.Plugin.DeepSeek.MCP]: [MCP] 客户端初始化成功: MCP-智能路由
+2026-02-19 15:02:27.490 [INF] [STranslate.App]: End STranslate startup ----------------------------------------------------
+2026-02-19 15:02:27.765 [ERR] [STranslate.Core.Internationalization]: Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.OpenAI\Languages\en.xaml>
+2026-02-19 15:02:27.765 [ERR] [STranslate.Core.Internationalization]: Default English Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.OpenAI\Languages\en.xaml>
+2026-02-19 15:02:27.765 [ERR] [STranslate.Core.Internationalization]: Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.OpenAI\Languages\en.xaml>
+2026-02-19 15:02:27.766 [ERR] [STranslate.Core.Internationalization]: Default English Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.OpenAI\Languages\en.xaml>
+2026-02-19 15:02:27.805 [ERR] [STranslate.Core.Internationalization]: Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.OpenAI\Languages\zh-cn.xaml>
+2026-02-19 15:02:27.805 [ERR] [STranslate.Core.Internationalization]: Default English Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.OpenAI\Languages\zh-cn.xaml>
+2026-02-19 15:02:27.805 [ERR] [STranslate.Core.Internationalization]: Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.OpenAI\Languages\zh-cn.xaml>
+2026-02-19 15:02:27.805 [ERR] [STranslate.Core.Internationalization]: Default English Language path can't be found <D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\Plugins\STranslate.Plugin.Translate.OpenAI\Languages\zh-cn.xaml>
+2026-02-19 15:03:01.541 [INF] [STranslate.Plugin.DeepSeek.MCP]: [提示词] 开始刷新全局提示词列表
+2026-02-19 15:03:01.541 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 初始化加载，从主软件获取 1 个全局提示词
+2026-02-19 15:03:01.541 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] ID=205bbf1d5c1748419a567d73e93271ad, Name=测试, Items数量=2
+2026-02-19 15:03:01.541 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:03:01.541 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[1] Role=user, Content=$content
+2026-02-19 15:03:01.542 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 同步完成后，插件中共有 1 个全局提示词
+2026-02-19 15:03:01.542 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   - 测试 (Items: 2)
+2026-02-19 15:03:01.542 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:03:01.542 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[1] Role=user, Content=$content
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [提示词] 开始刷新全局提示词列表
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 初始化加载，从主软件获取 1 个全局提示词
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] ID=205bbf1d5c1748419a567d73e93271ad, Name=测试, Items数量=2
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   Item[1] Role=user, Content=$content
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细] 同步完成后，插件中共有 1 个全局提示词
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]   - 测试 (Items: 2)
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[0] Role=system, Content=当用户询问:你好。你要回复生日快乐
+2026-02-19 15:03:01.601 [INF] [STranslate.Plugin.DeepSeek.MCP]: [全局提示词-详细]     Item[1] Role=user, Content=$content
+2026-02-19 15:03:12.894 [INF] [STranslate.App]: Application Exit
+2026-02-19 15:03:12.894 [INF] [STranslate.App]: Begin STranslate dispose ----------------------------------------------------
+2026-02-19 15:03:12.902 [INF] [STranslate.App]: End STranslate dispose ----------------------------------------------------
+2026-02-19 15:03:12.935 [INF] [STranslate.App]: Process Exit

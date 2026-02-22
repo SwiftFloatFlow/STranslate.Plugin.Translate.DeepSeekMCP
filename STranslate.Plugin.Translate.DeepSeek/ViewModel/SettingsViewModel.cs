@@ -110,6 +110,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             if (e.PropertyName == nameof(Main.SelectedPrompt))
             {
                 UpdateSelectedPromptStrategy();
+                // [全局提示词] 通知编辑按钮状态变更
+                OnPropertyChanged(nameof(IsSelectedPromptGlobal));
+                OnPropertyChanged(nameof(CanEditSelectedPrompt));
             }
         };
 
@@ -313,13 +316,39 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EditPrompt()
     {
-        var dialog = _context.GetPromptEditWindow(Main.Prompts);
+        // 记录当前选中的提示词ID
+        var selectedId = Main.SelectedPrompt?.Id;
+        var wasGlobal = Main.IsGlobalPrompt(Main.SelectedPrompt);
+        
+        // 只传递局部提示词给编辑窗口（过滤掉全局提示词）
+        var localPrompts = new ObservableCollection<Prompt>(
+            Main.Prompts.Where(p => !Main.IsGlobalPrompt(p)).Select(p => p.Clone()));
+        var dialog = _context.GetPromptEditWindow(localPrompts);
 
         if (dialog.ShowDialog() == true)
         {
-            _settings.Prompts = [.. Main.Prompts.Select(p => p.Clone())];
+            // 保存局部提示词到设置
+            _settings.Prompts = localPrompts.ToList();
             _context.SaveSettingStorage<Settings>();
-            Main.SelectedPrompt = Main.Prompts.FirstOrDefault(p => p.IsEnabled);
+            
+            // 同步更新 Main.Prompts：移除旧的局部提示词，添加新的局部提示词
+            var globalPrompts = Main.Prompts.Where(p => Main.IsGlobalPrompt(p)).ToList();
+            Main.Prompts.Clear();
+            foreach (var p in globalPrompts) Main.Prompts.Add(p);
+            foreach (var p in localPrompts) Main.Prompts.Add(p);
+            
+            // 恢复选中状态
+            if (wasGlobal && selectedId != null)
+            {
+                // 原来选中的是全局提示词，恢复选中
+                Main.SelectedPrompt = Main.Prompts.FirstOrDefault(p => p.Id == selectedId);
+            }
+            else
+            {
+                // 原来选中的是局部提示词，从新的局部提示词中恢复
+                Main.SelectedPrompt = localPrompts.FirstOrDefault(p => p.Id == selectedId)
+                    ?? localPrompts.FirstOrDefault(p => p.IsEnabled);
+            }
         }
     }
 
@@ -720,6 +749,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     
     // 当前选中提示词的策略显示文本（用于UI标签显示）
     [ObservableProperty] public partial string SelectedPromptStrategyText { get; set; } = "";
+    
+    // [全局提示词] 当前选中的提示词是否为全局提示词
+    public bool IsSelectedPromptGlobal => Main.IsGlobalPrompt(Main.SelectedPrompt);
+    
+    // [全局提示词] 当前选中的提示词是否可编辑（全局提示词不可编辑）
+    public bool CanEditSelectedPrompt => Main.SelectedPrompt != null && !IsSelectedPromptGlobal;
 
     // 服务器列表管理
     [ObservableProperty] public partial ObservableCollection<McpServerConfig> McpServers { get; set; }

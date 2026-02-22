@@ -169,20 +169,20 @@
                             Foreground="{DynamicResource SystemFillColorAttentionBrush}"/>
                     </Border>
                     
-                    <!-- 提示词选择下拉框（简化显示，不带策略标签） -->
+                    <!-- 提示词选择下拉框（固定宽度） -->
                     <ComboBox
                         x:Name="PromptComboBox"
-                        MinWidth="120"
+                        Width="150"
                         ui:ControlHelper.PlaceholderText="{DynamicResource STranslate_Plugin_Translate_DeepSeek_Prompt_Placeholder}"
                         DisplayMemberPath="Name"
                         ItemsSource="{Binding Main.Prompts}"
                         SelectedItem="{Binding Main.SelectedPrompt, Mode=TwoWay}" />
 
-                    <!-- 编辑提示词按钮 - 增加宽度，更换图标避免重复 -->
+                    <!-- 编辑提示词按钮 - 全局提示词不可编辑 -->
                     <Button 
                         Command="{Binding EditPromptCommand}" 
                         ToolTip="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_ToolTip}"
-                        IsEnabled="{Binding Main.SelectedPrompt, Converter={StaticResource NullToBoolConverter}}"
+                        IsEnabled="{Binding CanEditSelectedPrompt}"
                         MinWidth="100">
                         <ui:IconAndText Content="{DynamicResource STranslate_Plugin_Translate_DeepSeek_EditPrompt_Content}" Icon="{x:Static ui:FluentSystemIcons.Compose_24_Regular}" />
                     </Button>
@@ -202,9 +202,9 @@
                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     </Border>
                     
-                    <!-- 策略选择下拉框 -->
+                    <!-- 策略选择下拉框（固定宽度，与提示词下拉框一致） -->
                     <ComboBox 
-                        MinWidth="120"
+                        Width="150"
                         ItemsSource="{Binding PromptStrategyOptions}"
                         SelectedItem="{Binding SelectedPromptStrategy, Mode=TwoWay}"
                         IsEnabled="{Binding EnableMcp}"

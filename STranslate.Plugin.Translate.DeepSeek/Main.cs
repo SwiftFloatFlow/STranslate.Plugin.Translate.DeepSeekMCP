@@ -19,7 +19,16 @@ public class Main : LlmTranslatePluginBase
     private McpToolCache? _toolCache;
     private ConcurrentToolExecutor? _toolExecutor;
     private McpClientPool? _clientPool;
-    private readonly SemaphoreSlim _translationSemaphore = new(5, 5); // 限制最大5个并发翻译请求
+    private readonly SemaphoreSlim _translationSemaphore = new(5, 5);
+    
+    // [全局提示词] 识别全局提示词的ID集合
+    private HashSet<Guid> _globalPromptIds = [];
+    private IDisposable? _globalPromptsCallback;
+    
+    /// <summary>
+    /// 判断指定提示词是否为全局提示词
+    /// </summary>
+    public bool IsGlobalPrompt(Prompt? prompt) => prompt != null && _globalPromptIds.Contains(prompt.Id);
 
     /// <summary>
     /// 根据日志级别判断是否允许记录日志
@@ -72,12 +81,19 @@ public class Main : LlmTranslatePluginBase
     public override void SelectPrompt(Prompt? prompt)
     {
         base.SelectPrompt(prompt);
-        Settings.Prompts = [.. Prompts.Select(p => p.Clone())];
+        // 只保存局部提示词（过滤掉全局提示词）
+        Settings.Prompts = [.. Prompts.Where(p => !_globalPromptIds.Contains(p.Id)).Select(p => p.Clone())];
         Context.SaveSettingStorage<Settings>();
     }
 
     public override Control GetSettingUI()
     {
+        // [全局提示词] 如果全局提示词尚未加载（Init时可能主程序还没准备好），现在再尝试加载
+        if (_globalPromptIds.Count == 0)
+        {
+            LoadGlobalPrompts();
+        }
+        
         _viewModel ??= new SettingsViewModel(Context, Settings, this);
         _settingUi ??= new SettingsView { DataContext = _viewModel };
         return _settingUi;
@@ -163,11 +179,122 @@ public class Main : LlmTranslatePluginBase
         // 执行配置迁移
         Settings.Migrate();
         
-        Settings.Prompts.ForEach(Prompts.Add);
+        // [全局提示词] 先加载全局提示词，获取全局提示词ID集合
+        var globalPrompts = Context.GetGlobalPrompts();
+        _globalPromptIds = globalPrompts.Select(p => p.Id).ToHashSet();
+        
+        // 加载局部提示词（过滤掉可能是全局提示词的项）
+        foreach (var p in Settings.Prompts)
+        {
+            // 如果这个提示词ID在全局提示词中存在，跳过（不作为局部提示词加载）
+            if (_globalPromptIds.Contains(p.Id))
+            {
+                continue;
+            }
+            Prompts.Add(p);
+        }
+        
+        // 添加全局提示词到 Prompts
+        foreach (var p in globalPrompts)
+        {
+            Prompts.Add(p);
+        }
+        
+        // [全局提示词] 注册变更回调
+        _globalPromptsCallback = Context.RegisterGlobalPromptsChangedCallback(
+            OnGlobalPromptsChanged, delayMs: 100);
 
         if (Settings.EnableMcp && Settings.McpServers.Count > 0)
         {
             InitializeMcpClients();
+        }
+    }
+    
+    /// <summary>
+    /// [全局提示词] 加载全局提示词到 Prompts 集合（供回调使用）
+    /// </summary>
+    private void LoadGlobalPrompts()
+    {
+        var globalPrompts = Context.GetGlobalPrompts();
+        
+        // 更新全局提示词ID集合
+        var newGlobalIds = globalPrompts.Select(p => p.Id).ToHashSet();
+        
+        // 移除已经不在全局提示词列表中的旧全局提示词
+        for (int i = Prompts.Count - 1; i >= 0; i--)
+        {
+            if (_globalPromptIds.Contains(Prompts[i].Id) && !newGlobalIds.Contains(Prompts[i].Id))
+            {
+                Prompts.RemoveAt(i);
+            }
+        }
+        
+        // 更新ID集合
+        _globalPromptIds = newGlobalIds;
+        
+        // 移除已加载的局部提示词中实际上是全局提示词的项（ID匹配）
+        for (int i = Prompts.Count - 1; i >= 0; i--)
+        {
+            if (_globalPromptIds.Contains(Prompts[i].Id))
+            {
+                Prompts.RemoveAt(i);
+            }
+        }
+        
+        // 添加全局提示词
+        foreach (var p in globalPrompts)
+        {
+            if (!Prompts.Any(x => x.Id == p.Id))
+            {
+                Prompts.Add(p);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// [全局提示词] 变更回调
+    /// </summary>
+    private void OnGlobalPromptsChanged(IReadOnlyList<Prompt> newGlobalPrompts)
+    {
+        try
+        {
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // 保存当前选中的提示词ID
+                var previouslySelectedId = SelectedPrompt?.Id ?? Guid.Empty;
+                
+                // 移除旧的全局提示词
+                for (int i = Prompts.Count - 1; i >= 0; i--)
+                {
+                    if (_globalPromptIds.Contains(Prompts[i].Id))
+                    {
+                        Prompts.RemoveAt(i);
+                    }
+                }
+                
+                // 清空并重建 ID 集合
+                _globalPromptIds.Clear();
+                
+                // 添加新的全局提示词
+                foreach (var p in newGlobalPrompts)
+                {
+                    if (!Prompts.Any(x => x.Id == p.Id))
+                    {
+                        _globalPromptIds.Add(p.Id);
+                        Prompts.Add(p);
+                    }
+                }
+                
+                // 恢复选中状态
+                if (previouslySelectedId != Guid.Empty)
+                {
+                    SelectedPrompt = Prompts.FirstOrDefault(x => x.Id == previouslySelectedId);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Context.Logger.LogError(ex, "[全局提示词] 同步失败");
         }
     }
 
@@ -240,6 +367,10 @@ public class Main : LlmTranslatePluginBase
     public override void Dispose()
     {
         _viewModel?.Dispose();
+        
+        // [全局提示词] 取消注册回调
+        _globalPromptsCallback?.Dispose();
+        _globalPromptsCallback = null;
         
         // 释放连接池
         _clientPool?.Dispose();

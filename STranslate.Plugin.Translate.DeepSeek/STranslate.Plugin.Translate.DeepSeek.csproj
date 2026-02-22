@@ -7,6 +7,9 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <RepositoryUrl>https://github.com/SwiftFloatFlow/STranslate.Plugin.DeepSeek.MCP</RepositoryUrl>
         <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+        
+        <!-- 本地NuGet包源 -->
+        <RestoreSources>$(RestoreSources);$(MSBuildProjectDirectory)\..\LocalNuGet</RestoreSources>
 
         <TargetFramework>net10.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
@@ -55,7 +58,30 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="STranslate.Plugin" Version="1.0.5" />
+        <!-- 测试阶段暂时使用NuGet包，等主程序合并新功能后再切换
+        <Reference Include="STranslate.Plugin">
+            <HintPath>..\depend\STranslate.Plugin.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="CommunityToolkit.Mvvm">
+            <HintPath>D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\CommunityToolkit.Mvvm.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="iNKORE.UI.WPF">
+            <HintPath>D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\iNKORE.UI.WPF.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="iNKORE.UI.WPF.Modern">
+            <HintPath>D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\iNKORE.UI.WPF.Modern.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="iNKORE.UI.WPF.Modern.Controls">
+            <HintPath>D:\Doc\programtem\CherryWorkFiles\STranslate\STranslate-fork\src\.artifacts\Debug\iNKORE.UI.WPF.Modern.Controls.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        -->
+        <!-- 使用更新后的NuGet包（SDK 1.0.8，修复了全局提示词Role问题） -->
+        <PackageReference Include="STranslate.Plugin" Version="1.0.8" />
         <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
     </ItemGroup>
