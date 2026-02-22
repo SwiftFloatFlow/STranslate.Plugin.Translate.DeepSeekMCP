@@ -42,20 +42,21 @@ public class Settings : ObservableObject
 
 ### 重要变更（v4.0+）
 
-**提示词ID绑定**：策略映射现在使用提示词ID作为键，不再使用名称。这确保了即使提示词被重命名，策略绑定仍然有效。
-- `PromptIdMap` - 存储局部提示词名称到ID的映射
-- `PromptStrategyMap` - 使用ID作为键存储策略
+**全局提示词支持**：插件端支持从主软件加载全局提示词。
+- 使用 `Context.GetGlobalPrompts()` 获取全局提示词
+- 使用 `Context.RegisterGlobalPromptsChangedCallback()` 监听变更
+- 通过 `Prompt.Id` 识别全局提示词
+- 全局提示词在插件端**不可编辑**，编辑按钮自动禁用
+- 配置文件只保存局部提示词
 
-**全局提示词实时同步**：通过回调机制实现全局提示词的实时同步。
-- 插件注册 `RegisterGlobalPromptsChangedCallback` 回调
-- 主软件修改全局提示词时主动通知插件
-- 插件在UI线程上刷新提示词列表
+**策略绑定**：使用提示词 ID 作为键，不再使用名称。
+- `PromptStrategyMap` - 使用 `Prompt.Id.ToString("N")` 作为键
+- 确保提示词重命名后策略绑定仍然有效
 
 **UI优化**：
-- 提示词下拉框固定宽度120px
-- 全局提示词显示★前缀标识
-- 超长名称自动截断显示省略号
-- 鼠标悬停显示完整名称
+- 提示词下拉框固定宽度 150px
+- 全局提示词显示 🌐 图标标识
+- 策略下拉框宽度与提示词下拉框一致
 
 ### 重要变更（v3.0+）
 

@@ -711,16 +711,16 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        // 强制保存任何待保存的更改
         _autoSaveTimer?.Stop();
-        SaveSettings();
+        // [修复] 移除 SaveSettings() 调用
+        // 配置文件的保存/删除由主软件 PluginContext 统一管理
+        // Dispose 时不应再次保存，否则会导致已删除的配置文件被重新创建
         _autoSaveTimer = null;
         _resultClearTimer?.Stop();
         _resultClearTimer = null;
         PropertyChanged -= OnPropertyChanged;
         Models.CollectionChanged -= OnModelsCollectionChanged;
         
-        // 取消订阅策略变更事件
         StrategyEvents.Unsubscribe(this, OnPromptStrategyChanged);
     }
 

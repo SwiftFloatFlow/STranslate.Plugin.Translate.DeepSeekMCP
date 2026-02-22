@@ -88,18 +88,20 @@ docs/
 ## 重要变更（v4.0+）
 
 ### 架构变更
-- **新增全局提示词功能**：支持从主软件加载全局提示词
-  - 全局提示词显示★前缀标识
-  - 实时同步名称和prompt内容变更
-  - 使用ID绑定策略（避免名称变更导致策略丢失）
-  - 固定宽度下拉框（120px），超长名称自动截断
-- **新增实时同步机制**：通过主软件回调实现全局提示词实时同步
+- **全局提示词支持**：插件从主软件加载全局提示词，通过 `IPluginContext` 接口获取
+  - 全局提示词显示 🌐 图标标识
+  - 全局提示词在插件端不可编辑
+  - 使用 ID 识别和绑定策略
+  - 配置文件只保存局部提示词
+- **实时同步机制**：通过 `RegisterGlobalPromptsChangedCallback` 回调实现全局提示词实时同步
 
 ### 文件变更
 - **新增** `docs/modules/global-prompts.md` - 全局提示词功能文档
-- **修改** `Main.cs` - 添加全局提示词加载、同步、刷新逻辑
-- **修改** `SettingsView.xaml` - 添加★前缀显示、固定宽度下拉框
-- **修改** `PromptDisplayNameConverter.cs` - 添加全局提示词前缀标识
+- **修改** `Main.cs` - 全局提示词加载、ID 识别、回调处理
+- **修改** `SettingsViewModel.cs` - `IsGlobalPrompt`、`CanEditSelectedPrompt`、编辑逻辑
+- **修改** `SettingsView.xaml` - 固定宽度下拉框、编辑按钮绑定
+- **新增** `nuget.config` - 本地 NuGet 包源配置
+- **升级** `STranslate.Plugin` 到 1.0.8
 
 ## 重要变更（v3.0+）
 
