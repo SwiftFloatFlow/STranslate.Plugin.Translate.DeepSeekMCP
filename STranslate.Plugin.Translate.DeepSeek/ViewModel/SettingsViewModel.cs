@@ -118,6 +118,37 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
         // 订阅策略变更事件（用于命令系统与UI同步）
         StrategyEvents.Subscribe(this, OnPromptStrategyChanged);
+        
+        // [全局提示词] 监听 Main.Prompts 集合变化
+        Main.Prompts.CollectionChanged += (s, e) => RefreshPromptDisplayItems();
+        
+        // [全局提示词] 初始化提示词显示列表
+        RefreshPromptDisplayItems();
+    }
+
+    /// <summary>
+    /// [全局提示词] 刷新提示词显示列表
+    /// </summary>
+    public void RefreshPromptDisplayItems()
+    {
+        var currentId = Main.SelectedPrompt?.Id;
+        
+        PromptDisplayItems.Clear();
+        foreach (var p in Main.Prompts)
+        {
+            PromptDisplayItems.Add(new PromptDisplayItem(p, Main.IsGlobalPrompt(p)));
+        }
+        
+        // 恢复选中状态
+        if (currentId != null && currentId != Guid.Empty)
+        {
+            _selectedPromptDisplayItem = PromptDisplayItems.FirstOrDefault(x => x.Id == currentId);
+        }
+        else
+        {
+            _selectedPromptDisplayItem = PromptDisplayItems.FirstOrDefault(x => x.Prompt.IsEnabled);
+        }
+        OnPropertyChanged(nameof(SelectedPromptDisplayItem));
     }
 
     /// <summary>
@@ -749,6 +780,26 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     
     // 当前选中提示词的策略显示文本（用于UI标签显示）
     [ObservableProperty] public partial string SelectedPromptStrategyText { get; set; } = "";
+    
+    // [全局提示词] 提示词显示列表（包装类，包含 IsGlobal 属性）
+    public ObservableCollection<PromptDisplayItem> PromptDisplayItems { get; } = new();
+    
+    // [全局提示词] 当前选中的提示词显示项
+    private PromptDisplayItem? _selectedPromptDisplayItem;
+    public PromptDisplayItem? SelectedPromptDisplayItem
+    {
+        get => _selectedPromptDisplayItem;
+        set
+        {
+            if (_selectedPromptDisplayItem != value)
+            {
+                _selectedPromptDisplayItem = value;
+                OnPropertyChanged();
+                // 同步到 Main.SelectedPrompt
+                Main.SelectedPrompt = value?.Prompt;
+            }
+        }
+    }
     
     // [全局提示词] 当前选中的提示词是否为全局提示词
     public bool IsSelectedPromptGlobal => Main.IsGlobalPrompt(Main.SelectedPrompt);

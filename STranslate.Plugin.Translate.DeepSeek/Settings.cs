@@ -322,3 +322,20 @@ public class ToolResultDisplayModeOption
         DisplayName = displayName;
     }
 }
+
+/// <summary>
+/// 提示词显示包装项 - 用于下拉框显示全局/局部提示词
+/// </summary>
+public class PromptDisplayItem
+{
+    public Prompt Prompt { get; }
+    public bool IsGlobal { get; }
+    public Guid Id => Prompt.Id;
+    public string Name => Prompt.Name;
+
+    public PromptDisplayItem(Prompt prompt, bool isGlobal)
+    {
+        Prompt = prompt;
+        IsGlobal = isGlobal;
+    }
+}
