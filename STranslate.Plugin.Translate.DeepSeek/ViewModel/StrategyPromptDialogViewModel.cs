@@ -101,9 +101,9 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
     {
         if (SelectedStrategy == null) return;
         
-        if (_settings.CustomStrategyPrompts.TryGetValue(SelectedStrategy.Strategy, out var customPrompt))
+        if (_settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config) && !string.IsNullOrWhiteSpace(config.CustomPrompt))
         {
-            CurrentPrompt = customPrompt;
+            CurrentPrompt = config.CustomPrompt;
         }
         else
         {
@@ -121,9 +121,9 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
     {
         if (SelectedStrategy == null) return;
         
-        ConsecutiveToolLimit = StrategyConsecutiveLimitHelper.GetLimit(
-            _settings.StrategyConsecutiveToolLimits, 
-            SelectedStrategy.Strategy);
+        ConsecutiveToolLimit = _settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config) 
+            ? config.ConsecutiveToolLimit 
+            : 0;
     }
 
     /// <summary>
@@ -133,9 +133,9 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
     {
         if (SelectedStrategy == null) return;
         
-        TotalToolCallsLimit = StrategyTotalToolCallsHelper.GetLimit(
-            _settings.StrategyTotalToolCallsLimits,
-            SelectedStrategy.Strategy);
+        TotalToolCallsLimit = _settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config) 
+            ? config.TotalToolCallsLimit 
+            : 0;
     }
 
     /// <summary>
@@ -145,9 +145,9 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
     {
         if (SelectedStrategy == null) return;
         
-        if (_settings.StrategyToolResultDisplayModes.TryGetValue(SelectedStrategy.Strategy, out var mode))
+        if (_settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config))
         {
-            SelectedToolResultDisplayMode = mode;
+            SelectedToolResultDisplayMode = config.ToolResultDisplayMode;
         }
         else
         {
@@ -162,9 +162,9 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
     {
         if (SelectedStrategy == null) return;
         
-        if (_settings.StrategyToolChainDisplay.TryGetValue(SelectedStrategy.Strategy, out var enabled))
+        if (_settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config))
         {
-            EnableToolChainDisplay = enabled;
+            EnableToolChainDisplay = config.ToolChainDisplay;
         }
         else
         {
@@ -236,11 +236,17 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
         }
         
         // 保存提示词、上限值、工具结果显示模式和工具链显示开关
-        _settings.CustomStrategyPrompts[SelectedStrategy.Strategy] = CurrentPrompt;
-        _settings.StrategyConsecutiveToolLimits[SelectedStrategy.Strategy] = ConsecutiveToolLimit;
-        _settings.StrategyTotalToolCallsLimits[SelectedStrategy.Strategy] = TotalToolCallsLimit;
-        _settings.StrategyToolResultDisplayModes[SelectedStrategy.Strategy] = SelectedToolResultDisplayMode;
-        _settings.StrategyToolChainDisplay[SelectedStrategy.Strategy] = EnableToolChainDisplay;
+        if (!_settings.StrategyConfigs.ContainsKey(SelectedStrategy.Strategy))
+        {
+            _settings.StrategyConfigs[SelectedStrategy.Strategy] = new McpStrategyConfig { Strategy = SelectedStrategy.Strategy };
+        }
+        
+        var config = _settings.StrategyConfigs[SelectedStrategy.Strategy];
+        config.CustomPrompt = CurrentPrompt;
+        config.ConsecutiveToolLimit = ConsecutiveToolLimit;
+        config.TotalToolCallsLimit = TotalToolCallsLimit;
+        config.ToolResultDisplayMode = SelectedToolResultDisplayMode;
+        config.ToolChainDisplay = EnableToolChainDisplay;
         
         _dialog.DialogResult = true;
         _dialog.Close();

@@ -77,20 +77,8 @@ public class Settings
     // 提示词级 MCP 策略映射表（Key: 提示词名称, Value: 策略，默认为 Disabled）
     public Dictionary<string, McpToolStrategy> PromptStrategyMap { get; set; } = new();
     
-    // 策略自定义提示词（Key: 策略类型, Value: 自定义系统提示词）
-    public Dictionary<McpToolStrategy, string> CustomStrategyPrompts { get; set; } = new();
-    
-    // 策略连续调用上限（Key: 策略类型, Value: 同一工具最大连续调用次数，0=无限）
-    public Dictionary<McpToolStrategy, int> StrategyConsecutiveToolLimits { get; set; } = new();
-    
-    // 策略总工具调用上限（Key: 策略类型, Value: 最大总调用次数，0=无限）
-    public Dictionary<McpToolStrategy, int> StrategyTotalToolCallsLimits { get; set; } = new();
-    
-    // 策略工具结果显示模式（Key: 策略类型, Value: 显示模式，默认为Disabled）
-    public Dictionary<McpToolStrategy, ToolResultDisplayMode> StrategyToolResultDisplayModes { get; set; } = new();
-    
-    // 策略工具链显示开关（Key: 策略类型, Value: 是否显示，默认false）
-    public Dictionary<McpToolStrategy, bool> StrategyToolChainDisplay { get; set; } = new();
+    // [重构] MCP 策略配置（包含所有策略相关设置）
+    public Dictionary<McpToolStrategy, McpStrategyConfig> StrategyConfigs { get; set; } = new();
 
     public List<Prompt> Prompts { get; set; } =
     [
@@ -118,39 +106,46 @@ public class Settings
     {
         if (ConfigVersion < 2)
         {
-            // 迁移到版本2：添加新的策略级设置默认值
+            // 迁移到版本2：初始化新的 StrategyConfigs 结构
             foreach (var strategy in Enum.GetValues<McpToolStrategy>())
             {
-                // 初始化工具链显示默认值
-                if (!StrategyToolChainDisplay.ContainsKey(strategy))
+                StrategyConfigs[strategy] = new McpStrategyConfig
                 {
-                    StrategyToolChainDisplay[strategy] = false;
-                }
-                
-                // 初始化工具结果显示模式默认值
-                if (!StrategyToolResultDisplayModes.ContainsKey(strategy))
-                {
-                    StrategyToolResultDisplayModes[strategy] = ToolResultDisplayMode.Disabled;
-                }
-                
-                // 初始化连续调用上限默认值
-                if (!StrategyConsecutiveToolLimits.ContainsKey(strategy))
-                {
-                    StrategyConsecutiveToolLimits[strategy] = StrategyConsecutiveLimitHelper.DEFAULT_LIMIT;
-                }
-                
-                // 初始化总工具调用上限默认值
-                if (!StrategyTotalToolCallsLimits.ContainsKey(strategy))
-                {
-                    StrategyTotalToolCallsLimits[strategy] = StrategyTotalToolCallsHelper.DEFAULT_LIMIT;
-                }
+                    Strategy = strategy,
+                    ToolChainDisplay = false,
+                    ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
+                    ConsecutiveToolLimit = 0,
+                    TotalToolCallsLimit = 0,
+                    CustomPrompt = ""
+                };
             }
             
             ConfigVersion = 2;
         }
         
+        // [重构] 迁移到版本3：将 5 个分散的 Dictionary 合并为 StrategyConfigs
+        if (ConfigVersion < 3)
+        {
+            // 旧数据无法自动迁移，重新初始化
+            StrategyConfigs = new Dictionary<McpToolStrategy, McpStrategyConfig>();
+            foreach (var strategy in Enum.GetValues<McpToolStrategy>())
+            {
+                StrategyConfigs[strategy] = new McpStrategyConfig
+                {
+                    Strategy = strategy,
+                    ToolChainDisplay = false,
+                    ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
+                    ConsecutiveToolLimit = 0,
+                    TotalToolCallsLimit = 0,
+                    CustomPrompt = ""
+                };
+            }
+            
+            ConfigVersion = 3;
+        }
+        
         // 未来的迁移逻辑可以在这里添加
-        // if (ConfigVersion < 3) { ... }
+        // if (ConfigVersion < 4) { ... }
     }
 }
 
@@ -321,6 +316,32 @@ public class ToolResultDisplayModeOption
         Mode = mode;
         DisplayName = displayName;
     }
+}
+
+/// <summary>
+/// MCP 策略配置 - 包含策略的所有相关设置
+/// </summary>
+public class McpStrategyConfig
+{
+    public McpToolStrategy Strategy { get; set; }
+    
+    /// <summary>自定义系统提示词（空则使用默认）</summary>
+    public string CustomPrompt { get; set; } = "";
+    
+    /// <summary>同一工具连续调用上限（0=无限）</summary>
+    public int ConsecutiveToolLimit { get; set; } = 0;
+    
+    /// <summary>总工具调用上限（0=无限）</summary>
+    public int TotalToolCallsLimit { get; set; } = 0;
+    
+    /// <summary>工具结果显示模式</summary>
+    public ToolResultDisplayMode ToolResultDisplayMode { get; set; } = ToolResultDisplayMode.Disabled;
+    
+    /// <summary>是否显示工具链</summary>
+    public bool ToolChainDisplay { get; set; } = false;
+    
+    public bool HasConsecutiveLimit => ConsecutiveToolLimit > 0;
+    public bool HasTotalLimit => TotalToolCallsLimit > 0;
 }
 
 /// <summary>
