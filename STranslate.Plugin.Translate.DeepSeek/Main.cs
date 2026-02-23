@@ -357,9 +357,9 @@ public class Main : LlmTranslatePluginBase
             var temperature = Math.Clamp(Settings.Temperature, 0, 2);
             
             // 使用策略级别的总工具调用上限（0=无限）
-            int maxToolCalls = StrategyTotalToolCallsHelper.GetLimit(
-                Settings.StrategyTotalToolCallsLimits, 
-                strategy);
+            int maxToolCalls = Settings.StrategyConfigs.TryGetValue(strategy, out var config) 
+                ? config.TotalToolCallsLimit 
+                : 0;
             
             if (ShouldLog(1))
                 Context.Logger.LogInformation("[MCP策略] 当前策略总工具调用上限: {Limit}", 
@@ -383,9 +383,10 @@ public class Main : LlmTranslatePluginBase
             
             // 防止无限循环的计数器（按策略设置）
             var consecutiveToolCallCount = new Dictionary<string, int>();
-            int maxConsecutiveToolCalls = StrategyConsecutiveLimitHelper.GetLimit(
-                Settings.StrategyConsecutiveToolLimits, strategy);
-            bool enableConsecutiveLimit = StrategyConsecutiveLimitHelper.IsEnabled(maxConsecutiveToolCalls);
+            int maxConsecutiveToolCalls = Settings.StrategyConfigs.TryGetValue(strategy, out var config2) 
+                ? config2.ConsecutiveToolLimit 
+                : 0;
+            bool enableConsecutiveLimit = maxConsecutiveToolCalls > 0;
 
             // 2. 初始化MCP并准备工具（所有策略都立即连接）
             var allMessages = new List<object>();
@@ -946,9 +947,9 @@ public class Main : LlmTranslatePluginBase
 
         // 获取自定义提示词或默认提示词
         string prompt;
-        if (Settings.CustomStrategyPrompts.TryGetValue(strategy, out var customPrompt) && !string.IsNullOrWhiteSpace(customPrompt))
+        if (Settings.StrategyConfigs.TryGetValue(strategy, out var config) && !string.IsNullOrWhiteSpace(config.CustomPrompt))
         {
-            prompt = customPrompt;
+            prompt = config.CustomPrompt;
         }
         else
         {
@@ -1265,9 +1266,9 @@ public class Main : LlmTranslatePluginBase
         /// </summary>
         private ToolResultDisplayMode GetToolResultDisplayMode()
         {
-            if (_settings.StrategyToolResultDisplayModes.TryGetValue(_strategy, out var mode))
+            if (_settings.StrategyConfigs.TryGetValue(_strategy, out var config))
             {
-                return mode;
+                return config.ToolResultDisplayMode;
             }
             return ToolResultDisplayMode.Disabled; // 默认禁用结果
         }
@@ -1277,9 +1278,9 @@ public class Main : LlmTranslatePluginBase
         /// </summary>
         private bool GetToolChainDisplay()
         {
-            if (_settings.StrategyToolChainDisplay.TryGetValue(_strategy, out var enabled))
+            if (_settings.StrategyConfigs.TryGetValue(_strategy, out var config))
             {
-                return enabled;
+                return config.ToolChainDisplay;
             }
             return false; // 默认关闭
         }
@@ -1609,8 +1610,8 @@ CRITICAL INSTRUCTIONS:
         var strategyName = PromptStrategyHelper.GetStrategyName(strategy);
         
         // 获取当前策略的工具结果模式和工具链显示状态
-        var toolResultMode = Settings.StrategyToolResultDisplayModes.TryGetValue(strategy, out var mode) ? mode : ToolResultDisplayMode.Disabled;
-        var toolChainEnabled = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var chainEnabled) ? chainEnabled : false;
+        var toolResultMode = Settings.StrategyConfigs.TryGetValue(strategy, out var config) ? config.ToolResultDisplayMode : ToolResultDisplayMode.Disabled;
+        var toolChainEnabled = Settings.StrategyConfigs.TryGetValue(strategy, out var config2) && config2.ToolChainDisplay;
         
         return new CommandResult 
         { 
@@ -1646,8 +1647,9 @@ CRITICAL INSTRUCTIONS:
         if (currentPrompt != null)
         {
             var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
-            var mode = Settings.StrategyToolResultDisplayModes.TryGetValue(strategy, out var m) ? m : ToolResultDisplayMode.Disabled;
-            var toolChainEnabled = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var tc) ? tc : false;
+            var config = Settings.StrategyConfigs.TryGetValue(strategy, out var c) ? c : null;
+            var mode = config?.ToolResultDisplayMode ?? ToolResultDisplayMode.Disabled;
+            var toolChainEnabled = config?.ToolChainDisplay ?? false;
             sb.AppendLine($"当前策略工具结果: {GetToolResultDisplayModeName(mode)}");
             sb.AppendLine($"当前策略工具链显示: {(toolChainEnabled ? "开启" : "关闭")}");
         }
@@ -1715,9 +1717,15 @@ CRITICAL INSTRUCTIONS:
         }
 
         var strategy = Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var s) ? s : McpToolStrategy.Disabled;
-        var currentValue = Settings.StrategyToolChainDisplay.TryGetValue(strategy, out var enabled) ? enabled : false;
         
-        Settings.StrategyToolChainDisplay[strategy] = !currentValue;
+        // 确保配置存在
+        if (!Settings.StrategyConfigs.ContainsKey(strategy))
+        {
+            Settings.StrategyConfigs[strategy] = new McpStrategyConfig { Strategy = strategy };
+        }
+        
+        var currentValue = Settings.StrategyConfigs[strategy].ToolChainDisplay;
+        Settings.StrategyConfigs[strategy].ToolChainDisplay = !currentValue;
         Context.SaveSettingStorage<Settings>();
         
         var status = !currentValue ? "✅ 已启用" : "❎ 已禁用";
@@ -1745,8 +1753,8 @@ CRITICAL INSTRUCTIONS:
         // 如果没有参数，显示当前模式
         if (string.IsNullOrWhiteSpace(argument))
         {
-            var currentMode = Settings.StrategyToolResultDisplayModes.TryGetValue(strategy, out var mode) 
-                ? mode 
+            var currentMode = Settings.StrategyConfigs.TryGetValue(strategy, out var config) 
+                ? config.ToolResultDisplayMode 
                 : ToolResultDisplayMode.Disabled;
             return new CommandResult 
             { 
@@ -1776,7 +1784,13 @@ CRITICAL INSTRUCTIONS:
             };
         }
 
-        Settings.StrategyToolResultDisplayModes[strategy] = newMode.Value;
+        // 确保配置存在
+        if (!Settings.StrategyConfigs.ContainsKey(strategy))
+        {
+            Settings.StrategyConfigs[strategy] = new McpStrategyConfig { Strategy = strategy };
+        }
+        
+        Settings.StrategyConfigs[strategy].ToolResultDisplayMode = newMode.Value;
         Context.SaveSettingStorage<Settings>();
         
         return new CommandResult 
