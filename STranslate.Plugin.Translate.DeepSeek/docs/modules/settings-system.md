@@ -65,6 +65,34 @@ public enum McpToolStrategy
 }
 ```
 
+### 策略调用上限语义
+
+**总工具调用上限（TotalToolCallsLimit）**：
+- `-1`：无上限（不限制总调用次数）
+- `0`：禁用（不允许调用工具）
+- `1-50`：允许的调用次数
+- **默认值**：15 次
+
+**同一工具连续调用上限（ConsecutiveToolLimit）**：
+- `-1`：无上限（不限制连续调用同一工具）
+- `0`：禁用（不允许调用工具）
+- `1-10`：允许的连续调用次数
+- **默认值**：5 次
+
+### 提示词策略绑定机制
+
+策略通过**提示词名称**（Name）绑定到提示词：
+
+```csharp
+// Settings.cs
+public Dictionary<string, McpToolStrategy> PromptStrategyMap { get; set; } = new();
+```
+
+**绑定规则**：
+- 策略绑定的是提示词的 `Name` 属性
+- 当提示词被删除或改名时，`CleanupPromptStrategyMap()` 会自动清理脱绑的策略映射
+- 新提示词默认使用"禁用服务"策略
+
 ### McpServerConfig 类
 
 ```csharp
