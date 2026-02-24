@@ -191,8 +191,8 @@
                             x:Name="TotalToolCallsSlider"
                             MinWidth="200"
                             IsSnapToTickEnabled="True"
-                            Maximum="50"
-                            Minimum="0"
+                            Maximum="51"
+                            Minimum="-1"
                             TickFrequency="1"
                             TickPlacement="Both"
                             Value="{Binding TotalToolCallsLimit}" />
@@ -201,9 +201,13 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="0">
-                                            <Setter Property="Text" Value="无限（不启用上限）" />
+                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="-1">
+                                            <Setter Property="Text" Value="无上限" />
                                             <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="0">
+                                            <Setter Property="Text" Value="0 次（禁用）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding ElementName=TotalToolCallsSlider, Path=Value}" Value="15">
                                             <Setter Property="Text" Value="15 次（默认）" />
@@ -256,8 +260,8 @@
                             x:Name="ConsecutiveLimitSlider"
                             MinWidth="200"
                             IsSnapToTickEnabled="True"
-                            Maximum="10"
-                            Minimum="0"
+                            Maximum="11"
+                            Minimum="-1"
                             TickFrequency="1"
                             TickPlacement="Both"
                             Value="{Binding ConsecutiveToolLimit}" />
@@ -266,51 +270,25 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="0">
-                                            <Setter Property="Text" Value="无限（不启用上限）" />
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="-1">
+                                            <Setter Property="Text" Value="无上限" />
                                             <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="1">
-                                            <Setter Property="Text" Value="1 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="2">
-                                            <Setter Property="Text" Value="2 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="3">
-                                            <Setter Property="Text" Value="3 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="4">
-                                            <Setter Property="Text" Value="4 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="0">
+                                            <Setter Property="Text" Value="0 次（禁用）" />
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="5">
                                             <Setter Property="Text" Value="5 次（默认）" />
                                             <Setter Property="Foreground" Value="{DynamicResource SystemFillColorAttentionBrush}" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="6">
-                                            <Setter Property="Text" Value="6 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="7">
-                                            <Setter Property="Text" Value="7 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="8">
-                                            <Setter Property="Text" Value="8 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="9">
-                                            <Setter Property="Text" Value="9 次" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding ElementName=ConsecutiveLimitSlider, Path=Value}" Value="10">
-                                            <Setter Property="Text" Value="10 次" />
+                                            <Setter Property="Text" Value="10 次（最大值）" />
                                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
+                                    <Setter Property="Text" Value="{Binding ElementName=ConsecutiveLimitSlider, Path=Value, StringFormat='{}{0} 次'}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>

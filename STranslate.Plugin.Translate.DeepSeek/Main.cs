@@ -487,10 +487,13 @@ public class Main : LlmTranslatePluginBase
             var model = string.IsNullOrEmpty(Settings.Model) ? "deepseek-chat" : Settings.Model.Trim();
             var temperature = Math.Clamp(Settings.Temperature, 0, 2);
             
-            // 使用策略级别的总工具调用上限（0=无限）
+            // 使用策略级别的总工具调用上限（-1=无限，0=禁用，>0=允许次数）
             int maxToolCalls = Settings.StrategyConfigs.TryGetValue(strategy, out var config) 
                 ? config.TotalToolCallsLimit 
-                : 0;
+                : StrategyTotalToolCallsHelper.DEFAULT_LIMIT;
+            
+            // -1 代表无上限
+            if (maxToolCalls < 0) maxToolCalls = int.MaxValue;
             
             if (ShouldLog(1))
                 Context.Logger.LogInformation("[MCP策略] 当前策略总工具调用上限: {Limit}", 
@@ -516,8 +519,10 @@ public class Main : LlmTranslatePluginBase
             var consecutiveToolCallCount = new Dictionary<string, int>();
             int maxConsecutiveToolCalls = Settings.StrategyConfigs.TryGetValue(strategy, out var config2) 
                 ? config2.ConsecutiveToolLimit 
-                : 0;
-            bool enableConsecutiveLimit = maxConsecutiveToolCalls > 0;
+                : StrategyConsecutiveLimitHelper.DEFAULT_LIMIT;
+            // -1 代表无上限
+            if (maxConsecutiveToolCalls < 0) maxConsecutiveToolCalls = int.MaxValue;
+            bool enableConsecutiveLimit = maxConsecutiveToolCalls >= 0;
 
             // 2. 初始化MCP并准备工具（所有策略都立即连接）
             var allMessages = new List<object>();
@@ -1691,25 +1696,6 @@ CRITICAL INSTRUCTIONS:
         var parts = text.Split(new[] { ' ', '\t' }, 2, StringSplitOptions.RemoveEmptyEntries);
         var command = parts[0].ToLowerInvariant();
         var argument = parts.Length > 1 ? parts[1].Trim() : "";
-
-        // 检查 MCP 是否已启用
-        if (!Settings.EnableMcp)
-        {
-            // 只允许 /mcp 命令用于开启 MCP
-            if (command is "/mcp")
-            {
-                return Task.FromResult(ExecuteToggleMcpCommand());
-            }
-            
-            // 其他命令返回提示
-            return Task.FromResult(new CommandResult
-            {
-                IsCommand = true,
-                Success = false,
-                Message = "❎ MCP 服务已禁用，命令不可用\n\n" +
-                         "请使用 /mcp 命令开启 MCP 服务，或在设置中启用。"
-            });
-        }
 
         var result = command switch
         {

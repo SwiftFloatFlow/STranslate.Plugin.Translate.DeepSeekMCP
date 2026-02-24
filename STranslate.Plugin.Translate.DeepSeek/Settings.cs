@@ -114,8 +114,8 @@ public class Settings
                     Strategy = strategy,
                     ToolChainDisplay = false,
                     ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
-                    ConsecutiveToolLimit = 0,
-                    TotalToolCallsLimit = 0,
+                    ConsecutiveToolLimit = 5,
+                    TotalToolCallsLimit = 15,
                     CustomPrompt = ""
                 };
             }
@@ -135,8 +135,8 @@ public class Settings
                     Strategy = strategy,
                     ToolChainDisplay = false,
                     ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
-                    ConsecutiveToolLimit = 0,
-                    TotalToolCallsLimit = 0,
+                    ConsecutiveToolLimit = 5,
+                    TotalToolCallsLimit = 15,
                     CustomPrompt = ""
                 };
             }
@@ -238,9 +238,9 @@ public static class StrategyConsecutiveLimitHelper
     public const int DEFAULT_LIMIT = 5;
     
     /// <summary>
-    /// 最小值（0=无限）
+    /// 最小值（-1=无限）
     /// </summary>
-    public const int MIN_LIMIT = 0;
+    public const int MIN_LIMIT = -1;
     
     /// <summary>
     /// 最大值（10次）
@@ -260,9 +260,9 @@ public static class StrategyConsecutiveLimitHelper
     }
     
     /// <summary>
-    /// 检查是否启用上限（0代表不启用/无限）
+    /// 检查是否启用上限（-1代表不启用/无限，0代表禁用，>=0代表启用）
     /// </summary>
-    public static bool IsEnabled(int limit) => limit > 0;
+    public static bool IsEnabled(int limit) => limit >= 0;
 }
 
 /// <summary>
@@ -276,9 +276,9 @@ public static class StrategyTotalToolCallsHelper
     public const int DEFAULT_LIMIT = 15;
     
     /// <summary>
-    /// 最小值（0=无限）
+    /// 最小值（-1=无限）
     /// </summary>
-    public const int MIN_LIMIT = 0;
+    public const int MIN_LIMIT = -1;
     
     /// <summary>
     /// 最大值（50次）
@@ -298,9 +298,9 @@ public static class StrategyTotalToolCallsHelper
     }
     
     /// <summary>
-    /// 检查是否启用上限（0代表不启用/无限）
+    /// 检查是否启用上限（-1代表不启用/无限，0代表禁用，>=0代表启用）
     /// </summary>
-    public static bool IsEnabled(int limit) => limit > 0;
+    public static bool IsEnabled(int limit) => limit >= 0;
 }
 
 /// <summary>
@@ -328,11 +328,11 @@ public class McpStrategyConfig
     /// <summary>自定义系统提示词（空则使用默认）</summary>
     public string CustomPrompt { get; set; } = "";
     
-    /// <summary>同一工具连续调用上限（0=无限）</summary>
-    public int ConsecutiveToolLimit { get; set; } = 0;
+    /// <summary>同一工具连续调用上限（-1=无限，0=禁用，>0=允许次数）</summary>
+    public int ConsecutiveToolLimit { get; set; } = 5;
     
-    /// <summary>总工具调用上限（0=无限）</summary>
-    public int TotalToolCallsLimit { get; set; } = 0;
+    /// <summary>总工具调用上限（-1=无限，0=禁用，>0=允许次数）</summary>
+    public int TotalToolCallsLimit { get; set; } = 15;
     
     /// <summary>工具结果显示模式</summary>
     public ToolResultDisplayMode ToolResultDisplayMode { get; set; } = ToolResultDisplayMode.Disabled;
@@ -340,8 +340,8 @@ public class McpStrategyConfig
     /// <summary>是否显示工具链</summary>
     public bool ToolChainDisplay { get; set; } = false;
     
-    public bool HasConsecutiveLimit => ConsecutiveToolLimit > 0;
-    public bool HasTotalLimit => TotalToolCallsLimit > 0;
+    public bool HasConsecutiveLimit => ConsecutiveToolLimit >= 0;
+    public bool HasTotalLimit => TotalToolCallsLimit >= 0;
 }
 
 /// <summary>
