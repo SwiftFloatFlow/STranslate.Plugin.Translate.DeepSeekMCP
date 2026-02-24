@@ -73,6 +73,7 @@ public class Main : LlmTranslatePluginBase
     {
         base.SelectPrompt(prompt);
         Settings.Prompts = [.. Prompts.Select(p => p.Clone())];
+        Settings.CleanupPromptStrategyMap();
         Context.SaveSettingStorage<Settings>();
     }
 

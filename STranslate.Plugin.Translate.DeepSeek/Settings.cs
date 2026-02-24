@@ -98,6 +98,20 @@ public class Settings
             new PromptItem("user", "Please summarize the following text in $source (avoid explaining the original text):\r\n\r\n$content"),
         ]),
     ];
+
+    /// <summary>
+    /// 清理脱绑的策略映射（当提示词被删除或改名时调用）
+    /// 移除不在当前提示词列表中的策略映射
+    /// </summary>
+    public void CleanupPromptStrategyMap()
+    {
+        var currentPromptNames = Prompts.Select(p => p.Name).ToHashSet();
+        var keysToRemove = PromptStrategyMap.Keys.Where(k => !currentPromptNames.Contains(k)).ToList();
+        foreach (var key in keysToRemove)
+        {
+            PromptStrategyMap.Remove(key);
+        }
+    }
     
     /// <summary>
     /// 执行配置迁移
@@ -351,7 +365,6 @@ public class PromptDisplayItem
 {
     public Prompt Prompt { get; }
     public bool IsGlobal { get; }
-    public Guid Id => Prompt.Id;
     public string Name => Prompt.Name;
 
     public PromptDisplayItem(Prompt prompt, bool isGlobal)
