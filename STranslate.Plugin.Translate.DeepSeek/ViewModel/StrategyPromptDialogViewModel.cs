@@ -123,7 +123,7 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
         
         ConsecutiveToolLimit = _settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config) 
             ? config.ConsecutiveToolLimit 
-            : 0;
+            : StrategyConsecutiveLimitHelper.DEFAULT_LIMIT;
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public partial class StrategyPromptDialogViewModel : ObservableObject
         
         TotalToolCallsLimit = _settings.StrategyConfigs.TryGetValue(SelectedStrategy.Strategy, out var config) 
             ? config.TotalToolCallsLimit 
-            : 0;
+            : StrategyTotalToolCallsHelper.DEFAULT_LIMIT;
     }
 
     /// <summary>

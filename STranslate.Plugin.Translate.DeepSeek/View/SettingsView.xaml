@@ -207,7 +207,6 @@
                         MinWidth="120"
                         ItemsSource="{Binding PromptStrategyOptions}"
                         SelectedItem="{Binding SelectedPromptStrategy, Mode=TwoWay}"
-                        IsEnabled="{Binding EnableMcp}"
                         DisplayMemberPath="Name"
                         ui:ControlHelper.PlaceholderText="选择策略" />
                     
@@ -215,7 +214,6 @@
                     <Button 
                         Command="{Binding EditStrategyPromptCommand}"
                         ToolTip="编辑策略系统提示词"
-                        IsEnabled="{Binding EnableMcp}"
                         MinWidth="100">
                         <ui:IconAndText Content="编辑策略" Icon="{x:Static ui:FluentSystemIcons.Code_24_Regular}" />
                     </Button>

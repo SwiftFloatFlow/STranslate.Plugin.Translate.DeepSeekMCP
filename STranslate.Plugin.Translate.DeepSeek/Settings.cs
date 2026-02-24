@@ -114,8 +114,8 @@ public class Settings
                     Strategy = strategy,
                     ToolChainDisplay = false,
                     ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
-                    ConsecutiveToolLimit = 0,
-                    TotalToolCallsLimit = 0,
+                    ConsecutiveToolLimit = 5,
+                    TotalToolCallsLimit = 15,
                     CustomPrompt = ""
                 };
             }
@@ -135,8 +135,8 @@ public class Settings
                     Strategy = strategy,
                     ToolChainDisplay = false,
                     ToolResultDisplayMode = ToolResultDisplayMode.Disabled,
-                    ConsecutiveToolLimit = 0,
-                    TotalToolCallsLimit = 0,
+                    ConsecutiveToolLimit = 5,
+                    TotalToolCallsLimit = 15,
                     CustomPrompt = ""
                 };
             }
@@ -238,9 +238,9 @@ public static class StrategyConsecutiveLimitHelper
     public const int DEFAULT_LIMIT = 5;
     
     /// <summary>
-    /// 最小值（0=无限）
+    /// 最小值（-1=无限）
     /// </summary>
-    public const int MIN_LIMIT = 0;
+    public const int MIN_LIMIT = -1;
     
     /// <summary>
     /// 最大值（10次）
@@ -260,9 +260,9 @@ public static class StrategyConsecutiveLimitHelper
     }
     
     /// <summary>
-    /// 检查是否启用上限（0代表不启用/无限）
+    /// 检查是否启用上限（-1代表不启用/无限，0代表禁用，>=0代表启用）
     /// </summary>
-    public static bool IsEnabled(int limit) => limit > 0;
+    public static bool IsEnabled(int limit) => limit >= 0;
 }
 
 /// <summary>
@@ -276,9 +276,9 @@ public static class StrategyTotalToolCallsHelper
     public const int DEFAULT_LIMIT = 15;
     
     /// <summary>
-    /// 最小值（0=无限）
+    /// 最小值（-1=无限）
     /// </summary>
-    public const int MIN_LIMIT = 0;
+    public const int MIN_LIMIT = -1;
     
     /// <summary>
     /// 最大值（50次）
@@ -298,9 +298,9 @@ public static class StrategyTotalToolCallsHelper
     }
     
     /// <summary>
-    /// 检查是否启用上限（0代表不启用/无限）
+    /// 检查是否启用上限（-1代表不启用/无限，0代表禁用，>=0代表启用）
     /// </summary>
-    public static bool IsEnabled(int limit) => limit > 0;
+    public static bool IsEnabled(int limit) => limit >= 0;
 }
 
 /// <summary>
