@@ -57,7 +57,7 @@ public static class McpClientFactory
     /// <summary>
     /// 是否使用官方 SDK v2（实验性）
     /// </summary>
-    public static bool UseSdkV2 { get; set; } = false;
+    public static bool UseSdkV2 { get; set; } = true;
     
     /// <summary>
     /// 创建MCP客户端
