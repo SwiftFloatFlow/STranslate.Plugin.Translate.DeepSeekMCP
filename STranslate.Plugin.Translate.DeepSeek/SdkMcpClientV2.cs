@@ -66,12 +66,13 @@ public class SdkMcpClientV2 : IMcpClient, IDisposable
             if (ShouldLog(1))
                 _logger?.LogInformation("[MCP V2] 开始连接服务器: {ServerName}", _config.Name);
 
+            var authHeaders = GetAuthenticationHeaders();
+            
             var transport = new HttpClientTransport(new HttpClientTransportOptions
             {
                 Endpoint = new Uri(_config.Url),
+                AdditionalHeaders = authHeaders
             });
-
-            ConfigureAuthentication();
 
             var options = new McpClientOptions
             {
@@ -106,45 +107,48 @@ public class SdkMcpClientV2 : IMcpClient, IDisposable
         }
     }
 
-    private void ConfigureAuthentication()
+    private Dictionary<string, string>? GetAuthenticationHeaders()
     {
         if (string.IsNullOrEmpty(_config.ApiKey))
-            return;
+            return null;
 
         var apiKey = _config.ApiKey.Trim();
-        
+        string authValue;
+
         if (apiKey.StartsWith("Authorization=", StringComparison.OrdinalIgnoreCase))
         {
-            var authValue = apiKey.Substring("Authorization=".Length).Trim();
-            if (authValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            {
-                _httpClient!.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authValue);
-            }
-            else
-            {
-                _httpClient!.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {authValue}");
-            }
+            var value = apiKey.Substring("Authorization=".Length).Trim();
+            authValue = value.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? value : $"Bearer {value}";
         }
         else if (apiKey.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            _httpClient!.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", apiKey);
+            authValue = apiKey;
         }
         else if (apiKey.Contains(':'))
         {
-            var idx = _config.ApiKey.IndexOf(':');
-            var parts = new[] { _config.ApiKey[..idx], _config.ApiKey[(idx + 1)..] };
+            var idx = apiKey.IndexOf(':');
+            var parts = new[] { apiKey[..idx], apiKey[(idx + 1)..] };
             if (parts.Length == 2)
             {
-                _httpClient!.DefaultRequestHeaders.TryAddWithoutValidation(parts[0].Trim(), parts[1].Trim());
+                return new Dictionary<string, string>
+                {
+                    [parts[0].Trim()] = parts[1].Trim()
+                };
             }
+            authValue = $"Bearer {apiKey}";
         }
         else
         {
-            _httpClient!.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            authValue = $"Bearer {apiKey}";
         }
 
         if (ShouldLog(2))
-            _logger?.LogDebug("[MCP V2] 已配置认证");
+            _logger?.LogDebug("[MCP V2] 已配置认证头");
+
+        return new Dictionary<string, string>
+        {
+            ["Authorization"] = authValue
+        };
     }
 
     public async Task<List<McpTool>> ListToolsAsync(CancellationToken cancellationToken = default)
