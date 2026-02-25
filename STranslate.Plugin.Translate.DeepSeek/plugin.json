@@ -3,7 +3,7 @@
   "Name": "DeepSeekMCP",
   "Description": "DeepSeek MCP Translation Plugin with Model Context Protocol support",
   "Author": "SwiftFloatFlow",
-  "Version": "1.0.0",
+  "Version": "1.0.0-beta.1",
   "Website": "https://github.com/SwiftFloatFlow/STranslate.Plugin.DeepSeek.MCP",
   "ExecuteFileName": "STranslate.Plugin.DeepSeek.MCP.dll",
   "IconPath": "icon.png"
