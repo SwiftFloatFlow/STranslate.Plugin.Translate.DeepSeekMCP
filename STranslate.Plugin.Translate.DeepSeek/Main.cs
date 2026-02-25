@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
+using NullLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger;
 
 namespace STranslate.Plugin.Translate.DeepSeek;
 
@@ -41,7 +42,7 @@ public class Main : LlmTranslatePluginBase
         if (!Settings.EnableMcp)
         {
             if (ShouldLog(1))
-                Context.Logger.LogInformation("[MCP策略] 全局 MCP 功能已禁用，使用 Disabled 策略");
+                NullLogger.Instance.LogInformation("[MCP策略] 全局 MCP 功能已禁用，使用 Disabled 策略");
             return McpToolStrategy.Disabled;
         }
 
@@ -51,7 +52,7 @@ public class Main : LlmTranslatePluginBase
         {
             // 没有选中提示词，使用默认策略
             if (ShouldLog(1))
-                Context.Logger.LogInformation("[MCP策略] 未选择提示词，使用默认策略: Disabled");
+                NullLogger.Instance.LogInformation("[MCP策略] 未选择提示词，使用默认策略: Disabled");
             return McpToolStrategy.Disabled;
         }
 
@@ -59,13 +60,13 @@ public class Main : LlmTranslatePluginBase
         if (Settings.PromptStrategyMap.TryGetValue(currentPrompt.Name, out var promptStrategy))
         {
             if (ShouldLog(1))
-                Context.Logger.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}' 使用绑定策略: {promptStrategy}");
+                NullLogger.Instance.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}' 使用绑定策略: {promptStrategy}");
             return promptStrategy;
         }
 
         // 默认使用 Disabled
         if (ShouldLog(1))
-            Context.Logger.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}' 未绑定策略，使用默认策略: Disabled");
+            NullLogger.Instance.LogInformation($"[MCP策略] 提示词 '{currentPrompt.Name}' 未绑定策略，使用默认策略: Disabled");
         return McpToolStrategy.Disabled;
     }
 
@@ -184,38 +185,38 @@ public class Main : LlmTranslatePluginBase
             _mcpClients.Clear();
 
             // 初始化连接管理器
-            _connectionManager = McpConnectionManager.Instance(Context.Logger, Settings.LogLevel);
+            _connectionManager = McpConnectionManager.Instance(NullLogger.Instance, Settings.LogLevel);
             
             // 初始化工具缓存
-            _toolCache = new McpToolCache(Settings.McpToolCacheMinutes, Context.Logger, Settings.LogLevel);
+            _toolCache = new McpToolCache(Settings.McpToolCacheMinutes, NullLogger.Instance, Settings.LogLevel);
             
             // 初始化并发工具执行器
-            _toolExecutor = new ConcurrentToolExecutor(Settings.MaxConcurrentTools, Context.Logger, Settings.LogLevel);
+            _toolExecutor = new ConcurrentToolExecutor(Settings.MaxConcurrentTools, NullLogger.Instance, Settings.LogLevel);
 
             // 初始化连接池（如果不存在）
-            _clientPool ??= new McpClientPool(Context.Logger, Settings.LogLevel);
+            _clientPool ??= new McpClientPool(NullLogger.Instance, Settings.LogLevel);
 
             // 为每个启用的服务器创建客户端
             foreach (var server in Settings.McpServers.Where(s => s.Enabled && !string.IsNullOrWhiteSpace(s.Url)))
             {
                 try
                 {
-                    var client = McpClientFactory.CreateClient(server, Context.Logger, Settings.LogLevel);
+                    var client = McpClientFactory.CreateClient(server, NullLogger.Instance, Settings.LogLevel);
                     _mcpClients.Add(client);
                     if (ShouldLog(1))
-                        Context.Logger.LogInformation("[MCP] 客户端初始化成功: {ServerName}", server.Name);
+                        NullLogger.Instance.LogInformation("[MCP] 客户端初始化成功: {ServerName}", server.Name);
                 }
                 catch (Exception ex)
                 {
                     if (ShouldLog(0))
-                        Context.Logger.LogError("[MCP] 客户端初始化失败 {ServerName}: {Message}", server.Name, ex.Message);
+                        NullLogger.Instance.LogError("[MCP] 客户端初始化失败 {ServerName}: {Message}", server.Name, ex.Message);
                 }
             }
         }
         catch (Exception ex)
         {
             if (ShouldLog(0))
-                Context.Logger.LogError("[MCP] 初始化MCP客户端失败: {Message}", ex.Message);
+                NullLogger.Instance.LogError("[MCP] 初始化MCP客户端失败: {Message}", ex.Message);
         }
     }
 
@@ -315,7 +316,7 @@ public class Main : LlmTranslatePluginBase
         {
             if (ShouldLog(1) && effectiveStrategy != McpToolStrategy.Disabled && (!Settings.EnableMcp || _mcpClients.Count == 0))
             {
-                Context.Logger.LogInformation("[MCP策略] 策略非禁用但 MCP 未启用或无可用客户端，回退到传统 API");
+                NullLogger.Instance.LogInformation("[MCP策略] 策略非禁用但 MCP 未启用或无可用客户端，回退到传统 API");
             }
             await TranslateWithTraditionalApi(request, result, cancellationToken);
         }
@@ -338,7 +339,7 @@ public class Main : LlmTranslatePluginBase
                 }
                 // 其他策略：回退到普通API翻译
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 没有可用的MCP服务器，根据策略回退到普通翻译");
+                    NullLogger.Instance.LogInformation("[MCP] 没有可用的MCP服务器，根据策略回退到普通翻译");
                 await TranslateWithTraditionalApi(request, result, cancellationToken);
                 return;
             }
@@ -366,7 +367,7 @@ public class Main : LlmTranslatePluginBase
             if (maxToolCalls < 0) maxToolCalls = int.MaxValue;
             
             if (ShouldLog(1))
-                Context.Logger.LogInformation("[MCP策略] 当前策略总工具调用上限: {Limit}", 
+                NullLogger.Instance.LogInformation("[MCP策略] 当前策略总工具调用上限: {Limit}", 
                     maxToolCalls == 0 ? "无限" : $"{maxToolCalls}次");
 
             UriBuilder uriBuilder = new(Settings.Url);
@@ -417,7 +418,7 @@ public class Main : LlmTranslatePluginBase
                 }
                 // 其他策略：回退到普通API翻译
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 没有启用的MCP工具，根据策略回退到普通翻译");
+                    NullLogger.Instance.LogInformation("[MCP] 没有启用的MCP工具，根据策略回退到普通翻译");
                 await TranslateWithTraditionalApi(request, result, cancellationToken);
                 return;
             }
@@ -444,7 +445,7 @@ public class Main : LlmTranslatePluginBase
                 };
 
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 流式对话请求 #{CallCount}，消息数: {MessageCount}", toolCallCount + 1, allMessages.Count);
+                    NullLogger.Instance.LogInformation("[MCP] 流式对话请求 #{CallCount}，消息数: {MessageCount}", toolCallCount + 1, allMessages.Count);
 
                 // 流式响应收集器
                 var streamCollector = new StreamResponseCollector();
@@ -515,7 +516,7 @@ public class Main : LlmTranslatePluginBase
                 
                 if (ShouldLog(1))
                 {
-                    Context.Logger.LogInformation("[MCP] 流式响应完成，finish_reason: {FinishReason}, hasToolCalls: {HasToolCalls}", 
+                    NullLogger.Instance.LogInformation("[MCP] 流式响应完成，finish_reason: {FinishReason}, hasToolCalls: {HasToolCalls}", 
                         finishReason, hasToolCalls);
                 }
 
@@ -524,7 +525,7 @@ public class Main : LlmTranslatePluginBase
                 {
                     toolCallCount++;
                     if (ShouldLog(1))
-                        Context.Logger.LogInformation("[MCP] AI决定调用工具，共 {Count} 个", accumulatedToolCalls.Count);
+                        NullLogger.Instance.LogInformation("[MCP] AI决定调用工具，共 {Count} 个", accumulatedToolCalls.Count);
 
                     // 过滤掉DSML XML代码
                     if (assistantMsgContent.Contains("<｜DSML｜") || assistantMsgContent.Contains("function_calls"))
@@ -600,7 +601,7 @@ public class Main : LlmTranslatePluginBase
                     if (allToolsExceededLimit && currentToolNames.Count > 0)
                     {
                         if (ShouldLog(1))
-                            Context.Logger.LogInformation("[MCP] 所有工具达到连续调用上限({Max}次)，强制退出工具循环", maxConsecutiveToolCalls);
+                            NullLogger.Instance.LogInformation("[MCP] 所有工具达到连续调用上限({Max}次)，强制退出工具循环", maxConsecutiveToolCalls);
                         
                         // 为每个工具调用添加失败响应（标记为❎）
                         foreach (var tc in accumulatedToolCalls)
@@ -659,7 +660,7 @@ public class Main : LlmTranslatePluginBase
                         if (toolConfig != null && !toolConfig.Enabled)
                         {
                             if (ShouldLog(0))
-                                Context.Logger.LogWarning("[MCP] 工具 {ToolName} 已被禁用", toolName);
+                                NullLogger.Instance.LogWarning("[MCP] 工具 {ToolName} 已被禁用", toolName);
                             
                             toolChainList.Add((toolName, false));
                             allMessages.Add(new
@@ -682,7 +683,7 @@ public class Main : LlmTranslatePluginBase
                             if (consecutiveToolCallCount[toolName] > maxConsecutiveToolCalls)
                             {
                                 if (ShouldLog(0))
-                                    Context.Logger.LogWarning("[MCP] 工具 {ToolName} 连续调用超过{Max}次上限", toolName, maxConsecutiveToolCalls);
+                                    NullLogger.Instance.LogWarning("[MCP] 工具 {ToolName} 连续调用超过{Max}次上限", toolName, maxConsecutiveToolCalls);
                                 
                                 toolChainList.Add((toolName, false));
                                 allMessages.Add(new
@@ -757,7 +758,7 @@ public class Main : LlmTranslatePluginBase
                         });
 
                         if (ShouldLog(1))
-                            Context.Logger.LogInformation("[MCP] 工具 {ToolName} 执行{Status}", 
+                            NullLogger.Instance.LogInformation("[MCP] 工具 {ToolName} 执行{Status}", 
                                 toolResult.ToolName, toolResult.IsSuccess ? "成功" : "失败");
                     }
                     
@@ -772,7 +773,7 @@ public class Main : LlmTranslatePluginBase
                     // 【工具强制策略检查】如果策略是ToolForced但AI没有调用任何工具，报错
                     if (strategy == McpToolStrategy.ToolForced && toolCallCount == 0)
                     {
-                        Context.Logger.LogError("[MCP] 工具强制策略下AI未调用任何工具，这可能是由于：1)所有工具被禁用 2)AI忽略了强制提示");
+                        NullLogger.Instance.LogError("[MCP] 工具强制策略下AI未调用任何工具，这可能是由于：1)所有工具被禁用 2)AI忽略了强制提示");
                         result.Fail("❎ 工具强制策略执行失败\n\nAI未调用任何工具。可能原因：\n" +
                             "1. 所有MCP工具已被禁用 - 请在设置中启用至少一个工具\n" +
                             "2. AI忽略了强制提示 - 这是模型行为问题，建议重试\n\n" +
@@ -792,7 +793,7 @@ public class Main : LlmTranslatePluginBase
                     if (strategy == McpToolStrategy.ToolForced && 
                         (assistantContent.Contains("[NO_SUITABLE_TOOL]") || assistantContent.Contains("没有合适的工具")))
                     {
-                        Context.Logger.LogError("[MCP] 工具强制策略下AI报告没有合适的工具");
+                        NullLogger.Instance.LogError("[MCP] 工具强制策略下AI报告没有合适的工具");
                         result.Fail("❎ 工具强制策略执行失败\n\nAI判断当前可用的工具都无法回答您的问题。\n" +
                             "可用的工具与问题不匹配，因此无法继续。\n\n" +
                             "建议：\n" +
@@ -810,7 +811,7 @@ public class Main : LlmTranslatePluginBase
                     
                     // AI流式传输结束，无需额外添加工具链（已在ThreeStageContentBuilder中实时显示）
                     if (ShouldLog(1))
-                        Context.Logger.LogInformation("[MCP] 流式对话完成，共调用 {Count} 次工具", toolCallCount);
+                        NullLogger.Instance.LogInformation("[MCP] 流式对话完成，共调用 {Count} 次工具", toolCallCount);
                 }
             }
 
@@ -818,13 +819,13 @@ public class Main : LlmTranslatePluginBase
             if (toolCallCount >= maxToolCalls)
             {
                 if (ShouldLog(0)) // 粗略及以上级别（Warning默认记录）
-                    Context.Logger.LogWarning("[MCP] 达到最大工具调用次数限制 ({Max})", maxToolCalls);
+                    NullLogger.Instance.LogWarning("[MCP] 达到最大工具调用次数限制 ({Max})", maxToolCalls);
                 result.Text = $"[警告] 达到最大工具调用次数限制 ({maxToolCalls})\n\n" + result.Text;
             }
         }
         catch (Exception ex)
         {
-            Context.Logger.LogError(ex, "[MCP] 翻译过程发生异常");
+            NullLogger.Instance.LogError(ex, "[MCP] 翻译过程发生异常");
             result.Fail($"MCP翻译失败: {ex.Message}");
         }
     }
@@ -850,7 +851,7 @@ public class Main : LlmTranslatePluginBase
         InitializeMcpAndGetSystemPrompt(List<McpServerConfig> enabledServers, McpToolStrategy strategy, CancellationToken cancellationToken)
     {
         // 确保连接池已初始化
-        _clientPool ??= new McpClientPool(Context.Logger, Settings.LogLevel);
+        _clientPool ??= new McpClientPool(NullLogger.Instance, Settings.LogLevel);
         
         // 清理现有客户端列表（使用连接池后，这里只存储引用，不拥有所有权）
         _mcpClients.Clear();
@@ -863,12 +864,12 @@ public class Main : LlmTranslatePluginBase
                 var client = await _clientPool.GetClientAsync(server, cancellationToken);
                 _mcpClients.Add(client);
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 从连接池获取客户端: {ServerName}", server.Name);
+                    NullLogger.Instance.LogInformation("[MCP] 从连接池获取客户端: {ServerName}", server.Name);
             }
             catch (Exception ex)
             {
                 if (ShouldLog(0))
-                    Context.Logger.LogError("[MCP] 获取客户端失败 {ServerName}: {Message}", server.Name, ex.Message);
+                    NullLogger.Instance.LogError("[MCP] 获取客户端失败 {ServerName}: {Message}", server.Name, ex.Message);
             }
         }
         
@@ -885,7 +886,7 @@ public class Main : LlmTranslatePluginBase
                 var serverName = enabledServers.FirstOrDefault(s => _mcpClients.Any(c => c == currentClient))?.Name ?? "Unknown";
                 
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 服务器 {ServerName} 获取到 {Count} 个工具", serverName, tools.Count);
+                    NullLogger.Instance.LogInformation("[MCP] 服务器 {ServerName} 获取到 {Count} 个工具", serverName, tools.Count);
                 
                 foreach (var tool in tools)
                 {
@@ -895,7 +896,7 @@ public class Main : LlmTranslatePluginBase
             catch (Exception ex)
             {
                 if (ShouldLog(0))
-                    Context.Logger.LogError("[MCP] 获取工具列表失败: {Message}", ex.Message);
+                    NullLogger.Instance.LogError("[MCP] 获取工具列表失败: {Message}", ex.Message);
             }
         }
         
@@ -910,7 +911,7 @@ public class Main : LlmTranslatePluginBase
         }).ToList();
         
         if (ShouldLog(1))
-            Context.Logger.LogInformation("[MCP] 过滤后启用 {Count} 个工具，禁用 {DisabledCount} 个工具", 
+            NullLogger.Instance.LogInformation("[MCP] 过滤后启用 {Count} 个工具，禁用 {DisabledCount} 个工具", 
                 enabledTools.Count, allTools.Count - enabledTools.Count);
 
         // 转换为OpenAI Function Calling格式
@@ -1956,7 +1957,7 @@ CRITICAL INSTRUCTIONS:
         var completedCount = 0;
 
         if (ShouldLog(1))
-            Context.Logger.LogInformation("[MCP] 开始并发执行 {Count} 个工具，最大并发数: {Max}", tasks.Count, Settings.MaxConcurrentTools);
+            NullLogger.Instance.LogInformation("[MCP] 开始并发执行 {Count} 个工具，最大并发数: {Max}", tasks.Count, Settings.MaxConcurrentTools);
 
         var executingTasks = tasks.Select(async task =>
         {
@@ -1971,7 +1972,7 @@ CRITICAL INSTRUCTIONS:
                 if (toolConfig != null && !toolConfig.Enabled)
                 {
                     if (ShouldLog(0))
-                        Context.Logger.LogWarning("[MCP] 工具 {ToolName} 已被禁用", task.ToolName);
+                        NullLogger.Instance.LogWarning("[MCP] 工具 {ToolName} 已被禁用", task.ToolName);
                     
                     lock (results)
                     {
@@ -1993,7 +1994,7 @@ CRITICAL INSTRUCTIONS:
                     if (consecutiveToolCallCount[task.ToolName] > maxConsecutiveToolCalls)
                     {
                         if (ShouldLog(0))
-                            Context.Logger.LogWarning("[MCP] 工具 {ToolName} 连续调用超过{Max}次上限", task.ToolName, maxConsecutiveToolCalls);
+                            NullLogger.Instance.LogWarning("[MCP] 工具 {ToolName} 连续调用超过{Max}次上限", task.ToolName, maxConsecutiveToolCalls);
                         
                         lock (results)
                         {
@@ -2014,7 +2015,7 @@ CRITICAL INSTRUCTIONS:
                 if (task.Client == null)
                 {
                     if (ShouldLog(0))
-                        Context.Logger.LogError("[MCP] 找不到工具 {ToolName} 对应的服务器客户端", task.ToolName);
+                        NullLogger.Instance.LogError("[MCP] 找不到工具 {ToolName} 对应的服务器客户端", task.ToolName);
                     
                     lock (results)
                     {
@@ -2032,14 +2033,14 @@ CRITICAL INSTRUCTIONS:
 
                 // 执行工具调用
                 if (ShouldLog(1))
-                    Context.Logger.LogInformation("[MCP] 第 {Round} 轮 - 执行工具: {ToolName}", toolCallCount, task.ToolName);
+                    NullLogger.Instance.LogInformation("[MCP] 第 {Round} 轮 - 执行工具: {ToolName}", toolCallCount, task.ToolName);
 
                 try
                 {
                     var toolResult = await task.Client.CallToolAsync(task.ToolName, task.Arguments ?? new { });
                     
                     if (ShouldLog(1))
-                        Context.Logger.LogInformation("[MCP] 第 {Round} 轮 - 工具 {ToolName} 执行完成", toolCallCount, task.ToolName);
+                        NullLogger.Instance.LogInformation("[MCP] 第 {Round} 轮 - 工具 {ToolName} 执行完成", toolCallCount, task.ToolName);
 
                     lock (results)
                     {
@@ -2056,7 +2057,7 @@ CRITICAL INSTRUCTIONS:
                 catch (Exception ex)
                 {
                     if (ShouldLog(0))
-                        Context.Logger.LogError("[MCP] 工具 {ToolName} 执行失败: {Error}", task.ToolName, ex.Message);
+                        NullLogger.Instance.LogError("[MCP] 工具 {ToolName} 执行失败: {Error}", task.ToolName, ex.Message);
                     
                     lock (results)
                     {
@@ -2088,7 +2089,7 @@ CRITICAL INSTRUCTIONS:
         await Task.WhenAll(executingTasks);
 
         if (ShouldLog(1))
-            Context.Logger.LogInformation("[MCP] 所有工具执行完成，成功: {Success}/{Total}", 
+            NullLogger.Instance.LogInformation("[MCP] 所有工具执行完成，成功: {Success}/{Total}", 
                 results.Count(r => r.IsSuccess), results.Count);
 
         // 按原始顺序排序结果

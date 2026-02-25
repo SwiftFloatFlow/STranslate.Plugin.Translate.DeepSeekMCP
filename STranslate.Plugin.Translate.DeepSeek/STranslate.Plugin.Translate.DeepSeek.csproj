@@ -15,6 +15,9 @@
         <AssemblyProduct>DeepSeekMCP</AssemblyProduct>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        
+        <!-- 允许包降级警告 -->
+        <NoWarn>NU1605</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -57,19 +60,27 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="STranslate.Plugin" Version="1.0.5" />
+        <PackageReference Include="STranslate.Plugin" Version="1.0.8" />
         <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
+        <!-- MCP SDK 依赖项 -->
+        <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
     </ItemGroup>
 
-    <!-- 复制 ModelContextProtocol 依赖到输出目录 -->
+    <!-- 复制 MCP 及其依赖到输出目录 -->
     <Target Name="CopyMcpDependencies" AfterTargets="ResolveAssemblyReferences">
         <ItemGroup>
             <_McpAssemblies Include="$(NuGetPackageRoot)modelcontextprotocol\1.0.0\lib\net10.0\*.dll" />
             <_McpAssemblies Include="$(NuGetPackageRoot)modelcontextprotocol.core\1.0.0\lib\net10.0\*.dll" />
+            <!-- MCP SDK 依赖项 -->
+            <_McpAssemblies Include="$(NuGetPackageRoot)microsoft.extensions.ai.abstractions\10.3.0\lib\net10.0\*.dll" />
+            <_McpAssemblies Include="$(NuGetPackageRoot)microsoft.extensions.logging.abstractions\10.0.3\lib\net10.0\*.dll" />
+            <_McpAssemblies Include="$(NuGetPackageRoot)microsoft.extensions.caching.abstractions\10.0.3\lib\net10.0\*.dll" />
+            <_McpAssemblies Include="$(NuGetPackageRoot)microsoft.extensions.hosting.abstractions\10.0.3\lib\net10.0\*.dll" />
         </ItemGroup>
         <Copy SourceFiles="@(_McpAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-        <Message Text="Copied MCP assemblies to $(OutputPath)" Importance="high" />
+        <Message Text="Copied MCP and dependencies to $(OutputPath)" Importance="high" />
     </Target>
 
 </Project>

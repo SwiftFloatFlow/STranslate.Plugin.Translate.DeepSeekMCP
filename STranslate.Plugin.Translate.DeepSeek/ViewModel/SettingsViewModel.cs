@@ -223,11 +223,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 break;
             case nameof(LogLevel):
                 _settings.LogLevel = LogLevel;
-                _context.Logger.LogInformation($"[设置] 日志级别已更改为: {LogLevelOptions[LogLevel]}");
                 break;
             case nameof(EnableCommandSystem):
                 _settings.EnableCommandSystem = EnableCommandSystem;
-                _context.Logger.LogInformation($"[设置] 命令系统已更改为: {(EnableCommandSystem ? "启用" : "禁用")}");
                 SaveSettings();
                 break;
             
@@ -373,8 +371,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _settings.PromptStrategyMap[promptName] = newStrategy;
         _context.SaveSettingStorage<Settings>();
         
-        _context.Logger.LogInformation($"[提示词策略] 提示词 '{promptName}' 的策略已设置为: {PromptStrategyHelper.GetStrategyName(newStrategy)}");
-        
         // 立即更新显示文本（实时刷新）
         UpdateStrategyDisplayText();
     }
@@ -431,7 +427,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             ValidateResult = _context.GetTranslation("ValidationFailure");
-            _context.Logger.LogError(ex, _context.GetTranslation("ValidationFailure"));
         }
     }
 
@@ -542,21 +537,18 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
         try
         {
-            _context.Logger.LogInformation("[MCP] 开始测试并发现工具，服务器: {Url}", server.Url);
-            
             // 测试前清空当前工具列表，避免显示旧数据
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 McpTools.Clear();
             });
 
-            using var mcpClient = McpClientFactory.CreateClient(server, _context.Logger, _settings.LogLevel);
+            using var mcpClient = McpClientFactory.CreateClient(server, null, _settings.LogLevel);
             var isConnected = await mcpClient.ConnectAsync();
 
             if (!isConnected)
             {
                 McpValidateResult = "✗ MCP服务器连接失败";
-                _context.Logger.LogWarning("[MCP] 服务器连接失败: {Url}", server.Url);
                 
                 // 连接失败时清空工具列表
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
@@ -602,7 +594,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
             server.LastConnectedUrl = server.Url;
             McpValidateResult = $"✅ 连接成功，发现 {tools.Count} 个工具";
-            _context.Logger.LogInformation("[MCP] 测试并发现工具完成，共 {Count} 个工具", tools.Count);
 
             // 更新工具列表统计摘要
             OnPropertyChanged(nameof(ToolListSummary));
@@ -612,7 +603,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             McpValidateResult = $"✗ 错误: {ex.Message}";
-            _context.Logger.LogError(ex, "[MCP] 测试并发现工具失败");
             
             // 测试失败时清空工具列表
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
@@ -630,7 +620,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         if (tool == null) return;
 
         tool.Enabled = !tool.Enabled;
-        _context.Logger.LogInformation($"[MCP] 工具 '{tool.Name}' 已{(tool.Enabled ? "启用" : "禁用")}");
 
         // 保存更改
         SaveCurrentServer();
@@ -652,7 +641,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         
         // 刷新统计
         OnPropertyChanged(nameof(ToolListSummary));
-        _context.Logger.LogInformation($"[MCP] 工具启用状态已更新，当前启用: {McpTools.Count(t => t.Enabled)}/{McpTools.Count}");
     }
 
     #endregion
@@ -674,7 +662,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         {
             // 保存设置
             SaveSettings();
-            _context.Logger.LogInformation("[MCP] 策略提示词已更新");
         }
     }
 
@@ -837,22 +824,19 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         
         try
         {
-            _context.Logger.LogInformation("[MCP] 启用服务器前测试连接并发现工具: {ServerName}", CurrentServer.Name);
-            
             // 测试前清空当前工具列表，避免显示旧数据
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 McpTools.Clear();
             });
             
-            using var mcpClient = McpClientFactory.CreateClient(CurrentServer, _context.Logger, _settings.LogLevel);
+            using var mcpClient = McpClientFactory.CreateClient(CurrentServer, null, _settings.LogLevel);
             var isConnected = await mcpClient.ConnectAsync();
             
             if (!isConnected)
             {
                 // 连接失败，不启用并显示错误
                 McpValidateResult = $"✗ 服务器 '{CurrentServer.Name}' 连接失败，无法启用";
-                _context.Logger.LogWarning("[MCP] 服务器 '{ServerName}' 连接失败，未启用", CurrentServer.Name);
                 
                 // 强制刷新UI，确保开关显示为关闭状态
                 OnPropertyChanged(nameof(CurrentServerEnabled));
@@ -895,7 +879,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             });
             
             McpValidateResult = $"✅ 服务器 '{CurrentServer.Name}' 连接成功，发现 {tools.Count} 个工具并已启用";
-            _context.Logger.LogInformation("[MCP] 服务器 '{ServerName}' 连接成功，发现 {ToolCount} 个工具并已启用", CurrentServer.Name, tools.Count);
             
             // 更新工具列表统计摘要
             OnPropertyChanged(nameof(ToolListSummary));
@@ -907,7 +890,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         {
             // 连接异常，不启用并显示错误
             McpValidateResult = $"✗ 服务器 '{CurrentServer.Name}' 连接错误: {ex.Message}";
-            _context.Logger.LogError("[MCP] 启用服务器 '{ServerName}' 时发生错误: {Error}", CurrentServer.Name, ex.Message);
             
             // 强制刷新UI，确保开关显示为关闭状态
             OnPropertyChanged(nameof(CurrentServerEnabled));
