@@ -55,11 +55,22 @@ public class McpTool
 public static class McpClientFactory
 {
     /// <summary>
-    /// 创建MCP客户端（始终使用官方SDK）
+    /// 是否使用官方 SDK v2（实验性）
+    /// </summary>
+    public static bool UseSdkV2 { get; set; } = false;
+    
+    /// <summary>
+    /// 创建MCP客户端
     /// </summary>
     public static IMcpClient CreateClient(McpServerConfig config, ILogger? logger = null, int logLevel = 1)
     {
-        logger?.LogInformation("[MCP] 创建客户端连接服务器: {ServerName}", config.Name);
+        logger?.LogInformation("[MCP] 创建客户端连接服务器: {ServerName}, SDK版本: {Version}", 
+            config.Name, UseSdkV2 ? "V2 (官方SDK 1.0)" : "V1 (自实现)");
+        
+        if (UseSdkV2)
+        {
+            return new SdkMcpClientV2(config, logger, logLevel);
+        }
         return new SdkMcpClient(config, logger, logLevel);
     }
 }

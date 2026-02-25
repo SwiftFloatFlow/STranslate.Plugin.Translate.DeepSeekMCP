@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "Cherry-硅基流动": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Cherry-硅基流动",
+      "options": {
+        "apiKey": "{env:OPENCODE_API_KEY_硅基流动}",
+        "baseURL": "https://api.siliconflow.cn/v1"
+      },
+      "models": {
+        "Qwen/Qwen3-8B": {
+          "name": "Qwen/Qwen3-8B",
+          "reasoning": true
+        }
+      }
+    }
+  }
+}
