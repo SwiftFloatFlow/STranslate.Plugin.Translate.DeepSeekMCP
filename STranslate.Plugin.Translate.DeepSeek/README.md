@@ -14,12 +14,12 @@
 
 ## 技术栈
 
-- **.NET 8.0** - 运行时
+- **.NET 10.0** - 运行时
 - **WPF** - 用户界面
 - **CommunityToolkit.Mvvm** - MVVM 框架
 - **iNKORE.UI.WPF.Modern** - 现代 UI 组件
 - **Newtonsoft.Json** - JSON 序列化
-- **MCP Protocol** - 模型上下文协议
+- **自实现 MCP 协议** - 与官方 SDK 无关
 
 ## MCP 工具调用能力
 
@@ -127,7 +127,7 @@ STranslate.Plugin.Translate.DeepSeek/
 │
 ├── Main.cs                          # 核心：翻译逻辑、MCP管理和命令系统
 ├── Settings.cs                      # 数据模型：配置定义
-├── McpClient.cs                     # MCP客户端：连接和调用
+├── SdkMcpClient.cs                  # MCP客户端：连接和调用
 ├── McpServerConfig.cs               # MCP服务器配置类
 ├── McpToolConfig.cs                 # MCP工具配置类
 ├── StrategyEvents.cs                # 命令系统与UI同步事件
@@ -168,65 +168,6 @@ STranslate.Plugin.Translate.DeepSeek/
 │
 └── plugin.json                      # 插件元数据
 ```
-
-## 关键文件说明
-
-### Main.cs（核心翻译引擎）
-
-- **职责**：实现 `ITranslator` 接口，处理所有翻译请求
-- **主要方法**：
-  - `TranslateAsync()` - 翻译入口，路由到 MCP 或传统 API
-  - `TranslateWithMcpTools()` - MCP 翻译流程（多轮工具调用）
-  - `TranslateWithTraditionalApi()` - 传统 DeepSeek API 翻译
-  - `InitializeMcpAndGetSystemPrompt()` - 初始化 MCP 连接
-  - `GetSystemPromptByStrategy()` - 根据策略生成系统提示词
-- **状态管理**：`_mcpClients` - MCP 客户端列表
-- **行数**：约 900 行
-
-### Settings.cs（数据模型）
-
-- **职责**：定义所有配置数据结构
-- **核心类**：
-  - `Settings` - 主配置（API 密钥、MCP 设置等）
-  - `McpServerConfig` - 单个服务器配置
-  - `McpToolConfig` - 单个工具配置
-  - `McpToolStrategy` - 工具策略枚举（5 种策略）
-
-### McpClient.cs（MCP 协议实现）
-
-- **职责**：管理单个 MCP 服务器连接
-- **主要方法**：
-  - `ConnectAsync()` - 连接服务器（JSON-RPC 握手）
-  - `ListToolsAsync()` - 获取可用工具列表
-  - `CallToolAsync()` - 调用指定工具
-- **协议**：MCP over HTTP (JSON-RPC 2.0)
-
-### SettingsViewModel.cs（界面逻辑）
-
-- **职责**：设置界面的数据绑定和命令处理
-- **核心功能**：
-  - 服务器 CRUD 操作（增删改查）
-  - 工具发现和测试连接
-  - 设置自动保存（防抖 300ms）
-- **使用**：`CommunityToolkit.Mvvm` 源生成器
-
-### SettingsView.xaml（用户界面）
-
-- **职责**：设置界面的布局和样式
-- **布局结构**：
-  - API 配置区（URL、密钥、模型选择）
-  - 提示词配置区（提示词选择 + MCP 策略绑定 + 编辑）
-  - MCP 服务功能卡片（启用/禁用开关 + 显示工具链开关）
-  - MCP 全局设置区（全局策略 + 日志级别）
-  - MCP 服务器配置区（7 行 Grid 布局）
-    - 服务器配置行（下拉框 + 按钮 + 启用开关）
-    - 删除确认提示
-    - 服务器名称输入
-    - 服务器地址输入
-    - 请求体输入（API 密钥）
-    - 工具列表下拉（带启用开关）
-    - 测试连接按钮 + 结果
-- **布局原则**：标签右对齐（70px/110px 列宽），输入框左对齐拉伸
 
 ## 核心工作流程
 
@@ -303,7 +244,7 @@ SaveSettings() → Context.SaveSettings()
 
 ### 环境要求
 
-- **.NET SDK 8.0** 或更高
+- **.NET SDK 10.0** 或更高
 - **Visual Studio 2022** / VS Code / Rider
 - **Windows 10/11**
 
@@ -331,7 +272,7 @@ dotnet build --configuration Release
 1. **修改翻译逻辑** → 编辑 `Main.cs`
 2. **修改设置界面** → 编辑 `SettingsView.xaml` 和 `SettingsViewModel.cs`
 3. **添加配置项** → 编辑 `Settings.cs` → ViewModel → XAML
-4. **修改 MCP 功能** → 编辑 `McpClient.cs`
+4. **修改 MCP 功能** → 编辑 `SdkMcpClient.cs`
 
 ## 常见修改场景
 
@@ -358,7 +299,7 @@ dotnet build --configuration Release
 
 ### 场景4：添加新的 MCP 功能
 
-1. 在 `McpClient.cs` 添加新方法（如 `GetResourceAsync()`）
+1. 在 `SdkMcpClient.cs` 添加新方法（如 `GetResourceAsync()`）
 2. 在 `Main.cs` 的翻译流程中调用新方法
 3. 添加相应的配置项（如果需要）
 
@@ -383,7 +324,7 @@ STranslate\current\PortableConfig\Logs
 - `Main.cs:TranslateAsync()` - 翻译入口
 - `Main.cs:InitializeMcpAndGetSystemPrompt()` - MCP 初始化
 - `SettingsViewModel.cs:SaveSettings()` - 设置保存
-- `McpClient.cs:ConnectAsync()` - MCP 连接
+- `SdkMcpClient.cs:ConnectAsync()` - MCP 连接
 
 ## 相关资源
 

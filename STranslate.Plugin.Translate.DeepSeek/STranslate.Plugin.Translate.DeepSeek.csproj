@@ -56,7 +56,6 @@
 
     <ItemGroup>
         <PackageReference Include="STranslate.Plugin" Version="1.0.5" />
-        <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.6" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
     </ItemGroup>
 
